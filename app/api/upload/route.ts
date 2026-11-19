@@ -1,32 +1,23 @@
-import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { put } from '@vercel/blob';
+import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get('file') as File;
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // Загружаем файл в Vercel Blob
+    const blob = await put(file.name, file, {
+      access: 'public',
+      addRandomSuffix: true, // Добавляет случайный суффикс, чтобы имена не совпадали
+    });
 
-    // Создаем уникальное имя файла, чтобы не перезаписывать старые
-    const uniqueName = `${Date.now()}-${file.name.replace(/\s/g, "-")}`;
-    const uploadDir = path.join(process.cwd(), "public/uploads");
-    
-    // Создаем папку, если ее нет
-    await mkdir(uploadDir, { recursive: true });
-    
-    // Сохраняем файл
-    const filePath = path.join(uploadDir, uniqueName);
-    await writeFile(filePath, buffer);
-
-    // Возвращаем путь, по которому файл доступен на сайте
-    return NextResponse.json({ url: `/uploads/${uniqueName}` });
+    // Возвращаем полный URL (например: https://xyz.public.blob.vercel-storage.com/file.glb)
+    return NextResponse.json({ url: blob.url });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
