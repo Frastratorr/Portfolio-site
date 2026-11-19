@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Нужно для корректной работы Three.js в Next.js 16
+  cacheComponents: true,
   transpilePackages: ['three'],
   
   // Разрешаем Next.js загружать картинки из облака Vercel Blob
