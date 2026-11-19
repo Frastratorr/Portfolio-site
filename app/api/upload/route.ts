@@ -10,13 +10,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Загружаем файл в облако Vercel Blob
+    // Vercel автоматически использует OIDC-токен из окружения
     const blob = await put(file.name, file, {
       access: 'public',
-      addRandomSuffix: true, // Добавляет случайный суффикс к имени
+      addRandomSuffix: true,
     });
 
-    // Возвращаем ссылку на файл
     return NextResponse.json({ url: blob.url });
   } catch (error: any) {
     console.error("Upload error:", error);
