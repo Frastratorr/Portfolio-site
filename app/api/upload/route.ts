@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
     // Vercel автоматически использует OIDC-токен из окружения
     const blob = await put(file.name, file, {
-      access: 'public',
+      access: 'private',
       addRandomSuffix: true,
     });
 
