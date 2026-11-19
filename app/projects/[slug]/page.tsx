@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
-export const instant = false; // Разрешаем динамический рендеринг
 
 export default async function ProjectPage({
   params,
