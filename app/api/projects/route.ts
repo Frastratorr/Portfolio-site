@@ -2,13 +2,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../lib/prisma";
 
-// GET — получить все проекты
 export async function GET() {
   try {
     const projects = await prisma.project.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
       select: {
         id: true,
         title: true,
@@ -19,7 +16,7 @@ export async function GET() {
 
     return NextResponse.json(projects);
   } catch (error) {
-    console.error("Error fetching projects:", error);
+    console.error("Fetch projects error:", error);
 
     return NextResponse.json(
       { error: "Failed to fetch projects" },
@@ -28,12 +25,16 @@ export async function GET() {
   }
 }
 
-// POST — создать проект
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    if (!body.modelPath || !body.title || !body.slug || !body.description) {
+    if (
+      !body.slug ||
+      !body.title ||
+      !body.description ||
+      !body.modelPath
+    ) {
       return NextResponse.json(
         { error: "Missing required project fields" },
         { status: 400 }
@@ -47,15 +48,16 @@ export async function POST(req: Request) {
         description: body.description,
         modelPath: body.modelPath,
         previewImage: body.previewImage || null,
-        gallery: body.gallery || [],
-        processImages: body.processImages || [],
-        arLink: body.arLink || null,
+        gallery: Array.isArray(body.gallery) ? body.gallery : [],
+        processImages: Array.isArray(body.processImages)
+          ? body.processImages
+          : [],
       },
     });
 
     return NextResponse.json(project, { status: 201 });
   } catch (error) {
-    console.error("Error creating project:", error);
+    console.error("Create project error:", error);
 
     return NextResponse.json(
       { error: "Failed to create project" },

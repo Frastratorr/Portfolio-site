@@ -1,3 +1,4 @@
+
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -16,9 +17,20 @@ body {
   color: var(--foreground);
   background: var(--background);
   transition: background-color 0.3s ease, color 0.3s ease;
+
+  /* Убираем текстовый курсор при выборе обычного текста */
+  caret-color: transparent;
 }
 
-html, body {
+/* Сохраняем курсор внутри полей ввода */
+input,
+textarea,
+[contenteditable="true"] {
+  caret-color: auto;
+}
+
+html,
+body {
   overflow-x: hidden;
 }
 
