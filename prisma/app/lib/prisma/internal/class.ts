@@ -20,7 +20,7 @@ const config: runtime.GetPrismaClientConfig = {
   "clientVersion": "7.10.1",
   "engineVersion": "d1b3f377ca835d73fd50954a5e22128b9ebdd6b8",
   "activeProvider": "postgresql",
-  "inlineSchema": "generator client {\n  provider = \"prisma-client\"\n  output   = \"./app/lib/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel Project {\n  id            Int      @id @default(autoincrement())\n  slug          String   @unique\n  title         String\n  description   String\n  modelPath     String\n  previewImage  String?\n  gallery       String[] // Массив путей к картинкам\n  processImages String[]\n  arLink        String?\n  createdAt     DateTime @default(now())\n}\n",
+  "inlineSchema": "generator client {\n  provider = \"prisma-client\"\n  output   = \"./app/lib/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel Project {\n  id            Int      @id @default(autoincrement())\n  slug          String   @unique\n  title         String\n  description   String\n  modelPath     String\n  previewImage  String?\n  gallery       String[]\n  processImages String[]\n  arLink        String?\n  createdAt     DateTime @default(now())\n}\n",
   "runtimeDataModel": {
     "models": {},
     "enums": {},

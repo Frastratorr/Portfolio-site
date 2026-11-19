@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql" 
+  provider = "postgresql"
 }
 
 model Project {
@@ -14,7 +14,7 @@ model Project {
   description   String
   modelPath     String
   previewImage  String?
-  gallery       String[] // Массив путей к картинкам
+  gallery       String[]
   processImages String[]
   arLink        String?
   createdAt     DateTime @default(now())
