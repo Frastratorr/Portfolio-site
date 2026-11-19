@@ -1,10 +1,12 @@
 import { prisma } from "./lib/prisma";
 import ProjectGrid from "./components/ui/ProjectGrid";
+import { connection } from "next/server"; // 👈 Импортируем connection
 
-export const instant = false;
+export const instant = false; // 👈 Оставляем, чтобы разрешить блокировку
 
 export default async function Home() {
-  // Получаем проекты из базы данных (сортируем по дате создания)
+  await connection(); // 👈 Говорим Next.js: "Этот код должен выполняться при каждом запросе"
+
   const projects = await prisma.project.findMany({
     orderBy: { createdAt: "desc" },
   });
@@ -31,13 +33,12 @@ export default async function Home() {
           </p>
         </header>
 
-        {/* Передаем данные из базы в клиентский компонент */}
         {projects.length > 0 ? (
           <ProjectGrid projects={projects} />
         ) : (
           <div className="text-center py-20">
             <p className="text-xl text-neutral-500 mb-4">No projects in the database yet.</p>
-            <p className="text-sm text-neutral-400">Add your first project using Prisma Studio!</p>
+            <p className="text-sm text-neutral-400">Add your first project using the Admin panel!</p>
           </div>
         )}
       </div>
