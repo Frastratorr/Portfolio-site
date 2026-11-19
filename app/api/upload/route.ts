@@ -10,9 +10,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Vercel автоматически использует OIDC-токен из окружения
+    // Возвращаем 'public', так как хранилище теперь публичное
     const blob = await put(file.name, file, {
-      access: 'private',
+      access: 'public',
       addRandomSuffix: true,
     });
 

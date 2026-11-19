@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-// Берем тип Project напрямую из сгенерированного клиента Prisma
 import type { Project } from "../../../prisma/app/lib/prisma/client";
 
 export default function ProjectGrid({ projects }: { projects: Project[] }) {
@@ -24,7 +23,7 @@ export default function ProjectGrid({ projects }: { projects: Project[] }) {
             <div className="aspect-[4/3] relative overflow-hidden shrink-0">
               {project.previewImage ? (
                 <Image
-                  src={project.previewImage}
+                  src={project.previewImage} // 👈 Обычная ссылка из Vercel Blob
                   alt={project.title}
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
