@@ -1,5 +1,6 @@
+
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../../prisma/app/lib/prisma/client";
+import { PrismaClient } from "./prisma/client";
 import "dotenv/config";
 
 const globalForPrisma = globalThis as unknown as {
@@ -7,15 +8,19 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const url = process.env.DATABASE_URL;
+  const url = process.env.PRISMA_DATABASE_URL;
+
   if (!url) {
     throw new Error("DATABASE_URL is not set");
   }
+
   const adapter = new PrismaPg({ connectionString: url });
+
   return new PrismaClient({ adapter });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+export const prisma =
+  globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;

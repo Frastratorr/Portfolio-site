@@ -1,10 +1,31 @@
-
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
+
+const categories = [
+  "Hard Surface",
+  "Props",
+  "Environment",
+  "Sci-Fi",
+  "Weapons",
+  "Architecture",
+];
+
+function parseOptionalNumber(value: unknown): number | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null || value === "") return null;
+
+  const number = Number(value);
+
+  if (!Number.isInteger(number) || number < 0) {
+    throw new Error("Polygon and triangle counts must be non-negative integers.");
+  }
+
+  return number;
+}
 
 export async function GET(
   _req: Request,
@@ -67,37 +88,91 @@ export async function PUT(
       );
     }
 
+    const data = {
+      slug: String(body.slug).trim(),
+      title: String(body.title).trim(),
+      description: String(body.description).trim(),
+
+      ...(typeof body.modelPath === "string" && body.modelPath
+        ? { modelPath: body.modelPath }
+        : {}),
+
+      ...(body.previewImage !== undefined
+        ? { previewImage: body.previewImage || null }
+        : {}),
+
+      ...(Array.isArray(body.gallery)
+        ? { gallery: body.gallery }
+        : {}),
+
+      ...(Array.isArray(body.processImages)
+        ? { processImages: body.processImages }
+        : {}),
+
+      ...(body.category !== undefined
+        ? {
+            category: categories.includes(body.category)
+              ? body.category
+              : "Props",
+          }
+        : {}),
+
+      ...(body.wireframeImage !== undefined
+        ? { wireframeImage: body.wireframeImage || null }
+        : {}),
+
+      ...(body.finalRender !== undefined
+        ? { finalRender: body.finalRender || null }
+        : {}),
+
+      ...(body.polygonCount !== undefined
+        ? { polygonCount: parseOptionalNumber(body.polygonCount) }
+        : {}),
+
+      ...(body.triangleCount !== undefined
+        ? { triangleCount: parseOptionalNumber(body.triangleCount) }
+        : {}),
+
+      ...(body.textureResolution !== undefined
+        ? { textureResolution: body.textureResolution || null }
+        : {}),
+
+      ...(Array.isArray(body.softwareUsed)
+        ? { softwareUsed: body.softwareUsed }
+        : {}),
+
+      ...(body.modelingTime !== undefined
+        ? { modelingTime: body.modelingTime || null }
+        : {}),
+    };
+
     const updatedProject = await prisma.project.update({
       where: { id: projectId },
-      data: {
-        slug: body.slug,
-        title: body.title,
-        description: body.description,
-
-        ...(typeof body.modelPath === "string" && body.modelPath
-          ? { modelPath: body.modelPath }
-          : {}),
-
-        previewImage:
-          typeof body.previewImage === "string"
-            ? body.previewImage
-            : body.previewImage === null
-              ? null
-              : undefined,
-
-        ...(Array.isArray(body.gallery)
-          ? { gallery: body.gallery }
-          : {}),
-
-        ...(Array.isArray(body.processImages)
-          ? { processImages: body.processImages }
-          : {}),
-      },
+      data,
     });
 
     return NextResponse.json(updatedProject);
   } catch (error) {
     console.error("Update project error:", error);
+
+    if (error instanceof Error && error.message.includes("counts must")) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
+      return NextResponse.json(
+        { error: "This project slug already exists." },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json(
       { error: "Failed to update project" },
