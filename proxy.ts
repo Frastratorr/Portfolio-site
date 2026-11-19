@@ -1,20 +1,20 @@
-import { auth } from "@/auth";
+import { auth } from "./auth"; // 👈 Убедитесь, что путь правильный (если auth.ts в корне)
+import { NextResponse } from "next/server";
 
-// 👈 Функция теперь называется proxy, а не middleware
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const isOnAdmin = req.nextUrl.pathname.startsWith("/admin");
-  const isOnLogin = req.nextUrl.pathname.startsWith("/login");
 
+  // Если не залогинен и пытается зайти в админку — редирект на логин
   if (isOnAdmin && !isLoggedIn) {
-    return Response.redirect(new URL("/login", req.nextUrl.origin));
+    return NextResponse.redirect(new URL("/login", req.nextUrl.origin));
   }
 
-  if (isOnLogin && isLoggedIn) {
-    return Response.redirect(new URL("/admin", req.nextUrl.origin));
-  }
+  // В остальных случаях пропускаем
+  return NextResponse.next();
 });
 
+// Обязательно указываем matcher, чтобы proxy не блокировал картинки и API
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/admin/:path*"],
 };
