@@ -2,7 +2,6 @@ import { prisma } from "./lib/prisma";
 import ProjectGrid from "./components/ui/ProjectGrid";
 import { connection } from "next/server"; // 👈 Импортируем connection
 
-export const instant = false; // 👈 Оставляем, чтобы разрешить блокировку
 
 export default async function Home() {
   await connection(); // 👈 Говорим Next.js: "Этот код должен выполняться при каждом запросе"
