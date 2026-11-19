@@ -1,0 +1,2 @@
+INSERT INTO "Project" (slug, title, description, "modelPath", "previewImage", "arLink") 
+VALUES ('test-model', 'Test Model', 'My first practice model.', '/models/test.glb', '/images/helmet-preview.jpg', '/models/test.glb');

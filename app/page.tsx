@@ -1,65 +1,45 @@
-"use client";
+import { prisma } from "./lib/prisma";
+import ProjectGrid from "./components/ui/ProjectGrid";
 
-import Link from "next/link";
-import Image from "next/image";
-import { projects } from "./lib/projects";
-import { motion } from "framer-motion";
+export const instant = false;
 
-export default function Home() {
+export default async function Home() {
+  // Получаем проекты из базы данных (сортируем по дате создания)
+  const projects = await prisma.project.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+
   return (
-    <main className="min-h-screen bg-neutral-900 text-white p-8">
-      <div className="max-w-6xl mx-auto">
-        <header className="mb-12 pt-10">
-          <h1 className="text-5xl font-bold mb-4">3D Portfolio</h1>
-          <p className="text-neutral-400 text-xl">Hard Surface, Environment, Props</p>
+    <main className="min-h-screen bg-white dark:bg-neutral-950 text-black dark:text-white relative overflow-hidden transition-colors duration-300">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+      
+      <div className="max-w-7xl mx-auto px-6 py-24 relative z-10">
+        <header className="mb-20">
+          <div className="inline-block mb-4 px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-sm font-medium">
+            Junior 3D Artist
+          </div>
+          <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-6">
+            BUILDING <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+              WORLDS.
+            </span>
+          </h1>
+          <p className="text-neutral-600 dark:text-neutral-400 text-xl max-w-2xl">
+            I am an aspiring 3D Artist. I create game-ready 3D models, 
+            focusing on hard surface, props, and environment design. 
+            Passionate about learning and delivering high-quality assets.
+          </p>
         </header>
 
-        <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {projects.map((project, index) => (
-            <motion.div
-              key={project.slug}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <Link 
-                href={`/projects/${project.slug}`}
-                className="group block bg-neutral-800 rounded-xl overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all"
-              >
-                <div className="aspect-video relative overflow-hidden bg-neutral-700">
-                  {project.previewImage ? (
-                    <Image
-                      src={project.previewImage}
-                      alt={project.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      loading="eager"
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <span className="text-neutral-500">No Preview</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="p-6">
-                  <h2 className="text-2xl font-semibold mb-2 group-hover:text-blue-400 transition-colors">
-                    {project.title}
-                  </h2>
-                  <p className="text-neutral-400 line-clamp-2">
-                    {project.description}
-                  </p>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </motion.div>
+        {/* Передаем данные из базы в клиентский компонент */}
+        {projects.length > 0 ? (
+          <ProjectGrid projects={projects} />
+        ) : (
+          <div className="text-center py-20">
+            <p className="text-xl text-neutral-500 mb-4">No projects in the database yet.</p>
+            <p className="text-sm text-neutral-400">Add your first project using Prisma Studio!</p>
+          </div>
+        )}
       </div>
     </main>
   );

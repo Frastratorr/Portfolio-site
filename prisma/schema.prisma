@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./app/lib/prisma"
+}
+
+datasource db {
+  provider = "postgresql" 
+}
+
+model Project {
+  id            Int      @id @default(autoincrement())
+  slug          String   @unique
+  title         String
+  description   String
+  modelPath     String
+  previewImage  String?
+  gallery       String[] // Массив путей к картинкам
+  processImages String[]
+  arLink        String?
+  createdAt     DateTime @default(now())
+}
