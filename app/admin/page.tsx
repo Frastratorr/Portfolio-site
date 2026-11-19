@@ -10,6 +10,7 @@ type Project = {
   title: string;
   slug: string;
   createdAt: string;
+  isPublished: boolean;
 };
 
 export default function AdminDashboard() {
@@ -18,8 +19,8 @@ export default function AdminDashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
 
-  // Получение проектов
   const fetchProjects = useCallback(async () => {
     try {
       setLoading(true);
@@ -47,6 +48,51 @@ export default function AdminDashboard() {
     fetchProjects();
   }, [fetchProjects]);
 
+  // Переключение Draft / Published
+  const handlePublishToggle = async (project: Project) => {
+    const newStatus = !project.isPublished;
+
+    try {
+      setUpdatingId(project.id);
+
+      const res = await fetch(`/api/projects/${project.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          isPublished: newStatus,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.error || "Не удалось изменить статус");
+      }
+
+      setProjects((prev) =>
+        prev.map((item) =>
+          item.id === project.id
+            ? { ...item, isPublished: data.isPublished }
+            : item
+        )
+      );
+
+      router.refresh();
+    } catch (err) {
+      console.error("Publishing status error:", err);
+
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Ошибка изменения статуса"
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   // Удаление проекта
   const handleDelete = async (id: number) => {
     const confirmed = confirm(
@@ -60,8 +106,9 @@ export default function AdminDashboard() {
         method: "DELETE",
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Ошибка при удалении");
       }
 
@@ -70,8 +117,11 @@ export default function AdminDashboard() {
       router.refresh();
     } catch (err) {
       console.error("Delete error:", err);
+
       alert(
-        err instanceof Error ? err.message : "Ошибка при удалении"
+        err instanceof Error
+          ? err.message
+          : "Ошибка при удалении"
       );
     }
   };
@@ -86,12 +136,18 @@ export default function AdminDashboard() {
 
   return (
     <main className="min-h-screen bg-white dark:bg-neutral-950 text-black dark:text-white transition-colors duration-300 p-8">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
 
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold">
-            Admin Dashboard
-          </h1>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-4xl font-bold">
+              Admin Dashboard
+            </h1>
+
+            <p className="text-neutral-500 mt-2">
+              Manage your portfolio projects
+            </p>
+          </div>
 
           <Link
             href="/admin/new"
@@ -114,14 +170,15 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
+        <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-x-auto">
 
-          <table className="w-full text-left">
+          <table className="w-full text-left min-w-[750px]">
             <thead className="bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 text-sm">
               <tr>
                 <th className="p-4">Title</th>
                 <th className="p-4">Slug</th>
                 <th className="p-4">Date</th>
+                <th className="p-4">Status</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -131,7 +188,7 @@ export default function AdminDashboard() {
               {projects.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="p-8 text-center text-neutral-500"
                   >
                     Проектов пока нет.
@@ -155,7 +212,25 @@ export default function AdminDashboard() {
                       {new Date(project.createdAt).toLocaleDateString()}
                     </td>
 
-                    <td className="p-4 text-right space-x-4">
+                    <td className="p-4">
+                      <button
+                        onClick={() => handlePublishToggle(project)}
+                        disabled={updatingId === project.id}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-wait ${
+                          project.isPublished
+                            ? "bg-green-500/10 text-green-500 border border-green-500/30 hover:bg-green-500/20"
+                            : "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/20"
+                        }`}
+                      >
+                        {updatingId === project.id
+                          ? "Updating..."
+                          : project.isPublished
+                            ? "Published"
+                            : "Draft"}
+                      </button>
+                    </td>
+
+                    <td className="p-4 text-right whitespace-nowrap space-x-4">
                       <Link
                         href={`/admin/edit/${project.id}`}
                         className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
@@ -176,6 +251,20 @@ export default function AdminDashboard() {
 
             </tbody>
           </table>
+        </div>
+
+        <div className="flex flex-wrap gap-6 mt-6 text-sm text-neutral-500">
+          <p>
+            Total projects: {projects.length}
+          </p>
+
+          <p>
+            Published: {projects.filter((p) => p.isPublished).length}
+          </p>
+
+          <p>
+            Drafts: {projects.filter((p) => !p.isPublished).length}
+          </p>
         </div>
 
         <button

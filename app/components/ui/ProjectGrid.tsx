@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -22,14 +23,27 @@ export default function ProjectGrid({
   projects: Project[];
 }) {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const filteredProjects = useMemo(() => {
-    if (activeCategory === "All") return projects;
+    const query = searchQuery.trim().toLowerCase();
 
-    return projects.filter(
-      (project) => project.category === activeCategory
-    );
-  }, [projects, activeCategory]);
+    return projects.filter((project) => {
+      const matchesCategory =
+        activeCategory === "All" ||
+        project.category === activeCategory;
+
+      const matchesSearch =
+        !query ||
+        project.title.toLowerCase().includes(query) ||
+        project.description.toLowerCase().includes(query) ||
+        (project.tags ?? []).some((tag) =>
+          tag.toLowerCase().includes(query)
+        );
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [projects, activeCategory, searchQuery]);
 
   return (
     <section>
@@ -53,6 +67,17 @@ export default function ProjectGrid({
           {filteredProjects.length}{" "}
           {filteredProjects.length === 1 ? "project" : "projects"}
         </p>
+      </div>
+
+      {/* Search */}
+      <div className="mb-6">
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="Search projects, descriptions or tags..."
+          className="w-full md:max-w-md px-5 py-3 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 outline-none focus:border-blue-500 transition-colors text-sm"
+        />
       </div>
 
       {/* Category filters */}
@@ -137,9 +162,23 @@ export default function ProjectGrid({
                     {project.description}
                   </p>
 
-                  {/* Software tags */}
-                  <div className="flex flex-wrap gap-2 mt-6">
-                    {project.softwareUsed.length > 0 ? (
+                  {/* Project tags */}
+                  {project.tags && project.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-6">
+                      {project.tags.slice(0, 5).map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-3 py-1.5 text-xs font-medium bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-600 dark:text-blue-400"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Software */}
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {project.softwareUsed?.length > 0 ? (
                       project.softwareUsed.slice(0, 4).map((software) => (
                         <span
                           key={software}
@@ -162,19 +201,22 @@ export default function ProjectGrid({
       ) : (
         <div className="py-24 text-center rounded-3xl border border-dashed border-neutral-300 dark:border-neutral-800">
           <p className="text-xl font-semibold mb-2">
-            No projects in this category
+            No projects found
           </p>
 
           <p className="text-neutral-500 text-sm mb-6">
-            Try selecting another category.
+            Try changing your search or category.
           </p>
 
           <button
             type="button"
-            onClick={() => setActiveCategory("All")}
+            onClick={() => {
+              setActiveCategory("All");
+              setSearchQuery("");
+            }}
             className="px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors"
           >
-            Show all projects
+            Reset filters
           </button>
         </div>
       )}

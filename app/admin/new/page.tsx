@@ -4,15 +4,31 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "../../components/ui/ImageLoader";
+import ProjectMetadataFields from "../../components/ui/ProjectMetadataFields";
+import { analyzeGLB } from "../../lib/AnalyzeGLB";
 
 export default function NewProjectPage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisStatus, setAnalysisStatus] = useState("");
+
   const [formData, setFormData] = useState({
     slug: "",
     title: "",
     description: "",
+  });
+
+  const [category, setCategory] = useState("Props");
+  const [tags, setTags] = useState<string[]>([]);
+
+  const [technicalData, setTechnicalData] = useState({
+    polygonCount: "",
+    triangleCount: "",
+    textureResolution: "",
+    softwareUsed: "",
+    modelingTime: "",
   });
 
   const [modelFile, setModelFile] = useState<File | null>(null);
@@ -20,6 +36,69 @@ export default function NewProjectPage() {
   const [gallery, setGallery] = useState<string[]>([]);
   const [processImages, setProcessImages] = useState<string[]>([]);
   const [error, setError] = useState("");
+
+  const inputClass =
+    "w-full p-3 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-700 outline-none focus:ring-2 focus:ring-blue-500";
+
+  const updateTechnicalData = (
+    field: keyof typeof technicalData,
+    value: string
+  ) => {
+    setTechnicalData((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+  };
+
+  const handleModelChange = async (file: File | null) => {
+    setModelFile(file);
+    setAnalysisStatus("");
+    setError("");
+
+    setTechnicalData((previous) => ({
+      ...previous,
+      triangleCount: "",
+      textureResolution: "",
+    }));
+
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith(".glb")) {
+      setAnalysisStatus(
+        "Automatic analysis currently supports GLB files only."
+      );
+      return;
+    }
+
+    setAnalyzing(true);
+    setAnalysisStatus("Analyzing 3D model...");
+
+    try {
+      const result = await analyzeGLB(file);
+
+      setTechnicalData((previous) => ({
+        ...previous,
+        triangleCount: String(result.triangleCount),
+        textureResolution: result.textureResolution,
+      }));
+
+      setAnalysisStatus(
+        `Analysis complete. ${result.triangleCount.toLocaleString("en-US")} triangles found.`
+      );
+
+      if (result.generator) {
+        console.info("GLB exporter:", result.generator);
+      }
+    } catch (err) {
+      console.error("GLB analysis error:", err);
+
+      setAnalysisStatus(
+        "Could not analyze this GLB file. You can enter the values manually."
+      );
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   const uploadFile = async (file: File) => {
     const data = new FormData();
@@ -39,11 +118,18 @@ export default function NewProjectPage() {
     return result.url as string;
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
 
     if (!modelFile) {
       setError("Пожалуйста, выбери 3D-модель.");
+      return;
+    }
+
+    if (analyzing) {
+      setError("Дождись завершения анализа модели.");
       return;
     }
 
@@ -69,61 +155,88 @@ export default function NewProjectPage() {
           previewImage: previewImage[0],
           gallery,
           processImages,
+          category,
+          tags,
+
+          polygonCount: technicalData.polygonCount,
+          triangleCount: technicalData.triangleCount,
+          textureResolution: technicalData.textureResolution,
+          softwareUsed: technicalData.softwareUsed
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
+          modelingTime: technicalData.modelingTime,
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Не удалось создать проект.");
+        throw new Error(
+          result.error || "Не удалось создать проект."
+        );
       }
 
       router.push("/admin");
       router.refresh();
     } catch (err) {
       console.error("Create project error:", err);
+
       setError(
-        err instanceof Error ? err.message : "Ошибка при создании проекта."
+        err instanceof Error
+          ? err.message
+          : "Ошибка при создании проекта."
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const inputClass =
-    "w-full p-3 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-700 outline-none focus:ring-2 focus:ring-blue-500";
-
   return (
     <main className="min-h-screen bg-white dark:bg-neutral-950 text-black dark:text-white transition-colors duration-300 p-8">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">Add New Project</h1>
+        <h1 className="text-4xl font-bold mb-8">
+          Add New Project
+        </h1>
 
         <form
           onSubmit={handleSubmit}
           className="space-y-8 bg-neutral-100 dark:bg-neutral-900 p-8 rounded-2xl border border-neutral-200 dark:border-neutral-800"
         >
           <div>
-            <label className="block text-sm font-medium mb-2">Slug</label>
+            <label className="block text-sm font-medium mb-2">
+              Slug
+            </label>
+
             <input
               type="text"
               required
               className={inputClass}
               value={formData.slug}
               onChange={(e) =>
-                setFormData({ ...formData, slug: e.target.value })
+                setFormData({
+                  ...formData,
+                  slug: e.target.value,
+                })
               }
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Title</label>
+            <label className="block text-sm font-medium mb-2">
+              Title
+            </label>
+
             <input
               type="text"
               required
               className={inputClass}
               value={formData.title}
               onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
+                setFormData({
+                  ...formData,
+                  title: e.target.value,
+                })
               }
             />
           </div>
@@ -132,15 +245,26 @@ export default function NewProjectPage() {
             <label className="block text-sm font-medium mb-2">
               Description
             </label>
+
             <textarea
               required
               className={`${inputClass} h-32`}
               value={formData.description}
               onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
+                setFormData({
+                  ...formData,
+                  description: e.target.value,
+                })
               }
             />
           </div>
+
+          <ProjectMetadataFields
+            category={category}
+            tags={tags}
+            onCategoryChange={setCategory}
+            onTagsChange={setTags}
+          />
 
           <div>
             <label className="block text-sm font-medium mb-2">
@@ -152,7 +276,7 @@ export default function NewProjectPage() {
               accept=".glb,.gltf"
               required
               onChange={(e) =>
-                setModelFile(e.target.files?.[0] || null)
+                handleModelChange(e.target.files?.[0] || null)
               }
               className="w-full p-3 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-700"
             />
@@ -162,6 +286,108 @@ export default function NewProjectPage() {
                 Выбрано: {modelFile.name}
               </p>
             )}
+
+            {analysisStatus && (
+              <p className={`text-sm mt-2 ${
+                analyzing ? "text-blue-500" : "text-green-600"
+              }`}>
+                {analysisStatus}
+              </p>
+            )}
+          </div>
+
+          <div className="border-t border-neutral-200 dark:border-neutral-800 pt-6 space-y-5">
+            <div>
+              <h2 className="text-xl font-bold">
+                Technical Breakdown
+              </h2>
+              <p className="text-sm text-neutral-500 mt-1">
+                Some values are calculated automatically from your GLB file.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Polygon Count
+              </label>
+              <input
+                type="number"
+                min="0"
+                className={inputClass}
+                placeholder="Enter polygon count manually"
+                value={technicalData.polygonCount}
+                onChange={(e) =>
+                  updateTechnicalData("polygonCount", e.target.value)
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Triangle Count
+              </label>
+              <input
+                type="number"
+                min="0"
+                className={inputClass}
+                placeholder="Automatically calculated"
+                value={technicalData.triangleCount}
+                onChange={(e) =>
+                  updateTechnicalData("triangleCount", e.target.value)
+                }
+              />
+              <p className="text-xs text-neutral-500 mt-1">
+                Calculated from mesh geometry. You can edit it if needed.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Texture Resolution
+              </label>
+              <input
+                type="text"
+                className={inputClass}
+                placeholder="Automatically detected"
+                value={technicalData.textureResolution}
+                onChange={(e) =>
+                  updateTechnicalData("textureResolution", e.target.value)
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Software Used
+              </label>
+              <input
+                type="text"
+                className={inputClass}
+                placeholder="Blender, Substance Painter"
+                value={technicalData.softwareUsed}
+                onChange={(e) =>
+                  updateTechnicalData("softwareUsed", e.target.value)
+                }
+              />
+              <p className="text-xs text-neutral-500 mt-1">
+                Separate multiple programs with commas.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Modeling Time
+              </label>
+              <input
+                type="text"
+                className={inputClass}
+                placeholder="e.g. 12 hours"
+                value={technicalData.modelingTime}
+                onChange={(e) =>
+                  updateTechnicalData("modelingTime", e.target.value)
+                }
+              />
+            </div>
           </div>
 
           <div className="border-t border-neutral-200 dark:border-neutral-800 pt-6">
@@ -197,10 +423,14 @@ export default function NewProjectPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || analyzing}
             className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition-colors disabled:opacity-50"
           >
-            {loading ? "Uploading and saving..." : "Add Project"}
+            {loading
+              ? "Uploading and saving..."
+              : analyzing
+                ? "Analyzing model..."
+                : "Add Project"}
           </button>
         </form>
       </div>

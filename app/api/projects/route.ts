@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import { prisma } from "../../lib/prisma";
 
@@ -10,6 +11,37 @@ const categories = [
   "Architecture",
 ];
 
+function normalizeTags(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+
+  return [
+    ...new Map(
+      value
+        .filter((tag): tag is string => typeof tag === "string")
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+        .map((tag) => [tag.toLowerCase(), tag] as const)
+    ).values(),
+  ];
+}
+
+function parseOptionalNumber(value: unknown): number | null {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  const number = Number(value);
+
+  if (!Number.isInteger(number) || number < 0) {
+    throw new Error(
+      "Polygon and triangle counts must be non-negative integers."
+    );
+  }
+
+  return number;
+}
+
+// Получение всех проектов для админки
 export async function GET() {
   try {
     const projects = await prisma.project.findMany({
@@ -19,7 +51,9 @@ export async function GET() {
         title: true,
         slug: true,
         category: true,
+        tags: true,
         createdAt: true,
+        isPublished: true,
       },
     });
 
@@ -34,11 +68,17 @@ export async function GET() {
   }
 }
 
+// Создание проекта
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    if (!body.slug || !body.title || !body.description || !body.modelPath) {
+    if (
+      !body.slug ||
+      !body.title ||
+      !body.description ||
+      !body.modelPath
+    ) {
       return NextResponse.json(
         { error: "Missing required project fields" },
         { status: 400 }
@@ -48,6 +88,9 @@ export async function POST(req: Request) {
     const category = categories.includes(body.category)
       ? body.category
       : "Props";
+
+    const polygonCount = parseOptionalNumber(body.polygonCount);
+    const triangleCount = parseOptionalNumber(body.triangleCount);
 
     const project = await prisma.project.create({
       data: {
@@ -63,23 +106,18 @@ export async function POST(req: Request) {
           : [],
 
         category,
+        tags: normalizeTags(body.tags),
+
+        isPublished:
+          typeof body.isPublished === "boolean"
+            ? body.isPublished
+            : true,
 
         wireframeImage: body.wireframeImage || null,
         finalRender: body.finalRender || null,
 
-        polygonCount:
-          body.polygonCount !== "" &&
-          body.polygonCount !== null &&
-          body.polygonCount !== undefined
-            ? Number(body.polygonCount)
-            : null,
-
-        triangleCount:
-          body.triangleCount !== "" &&
-          body.triangleCount !== null &&
-          body.triangleCount !== undefined
-            ? Number(body.triangleCount)
-            : null,
+        polygonCount,
+        triangleCount,
 
         textureResolution: body.textureResolution || null,
 
@@ -94,6 +132,13 @@ export async function POST(req: Request) {
     return NextResponse.json(project, { status: 201 });
   } catch (error) {
     console.error("Create project error:", error);
+
+    if (error instanceof Error && error.message.includes("counts must")) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
 
     if (
       typeof error === "object" &&

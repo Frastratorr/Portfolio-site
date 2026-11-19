@@ -81,6 +81,8 @@ export const ProjectScalarFieldEnum = {
   processImages: 'processImages',
   arLink: 'arLink',
   category: 'category',
+  tags: 'tags',
+  isPublished: 'isPublished',
   wireframeImage: 'wireframeImage',
   finalRender: 'finalRender',
   polygonCount: 'polygonCount',

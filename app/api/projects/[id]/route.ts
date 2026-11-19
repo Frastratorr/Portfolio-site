@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
 
@@ -14,6 +15,20 @@ const categories = [
   "Architecture",
 ];
 
+function normalizeTags(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+
+  return [
+    ...new Map(
+      value
+        .filter((tag): tag is string => typeof tag === "string")
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+        .map((tag) => [tag.toLowerCase(), tag] as const)
+    ).values(),
+  ];
+}
+
 function parseOptionalNumber(value: unknown): number | null | undefined {
   if (value === undefined) return undefined;
   if (value === null || value === "") return null;
@@ -21,21 +36,34 @@ function parseOptionalNumber(value: unknown): number | null | undefined {
   const number = Number(value);
 
   if (!Number.isInteger(number) || number < 0) {
-    throw new Error("Polygon and triangle counts must be non-negative integers.");
+    throw new Error(
+      "Polygon and triangle counts must be non-negative integers."
+    );
   }
 
   return number;
 }
 
+function getProjectId(id: string): number | null {
+  const projectId = Number(id);
+
+  if (!Number.isInteger(projectId) || projectId <= 0) {
+    return null;
+  }
+
+  return projectId;
+}
+
+// Получение проекта
 export async function GET(
   _req: Request,
   { params }: RouteContext
 ) {
   try {
     const { id } = await params;
-    const projectId = Number(id);
+    const projectId = getProjectId(id);
 
-    if (!Number.isInteger(projectId) || projectId <= 0) {
+    if (!projectId) {
       return NextResponse.json(
         { error: "Invalid project ID" },
         { status: 400 }
@@ -64,15 +92,16 @@ export async function GET(
   }
 }
 
+// Полное редактирование проекта
 export async function PUT(
   req: Request,
   { params }: RouteContext
 ) {
   try {
     const { id } = await params;
-    const projectId = Number(id);
+    const projectId = getProjectId(id);
 
-    if (!Number.isInteger(projectId) || projectId <= 0) {
+    if (!projectId) {
       return NextResponse.json(
         { error: "Invalid project ID" },
         { status: 400 }
@@ -115,6 +144,14 @@ export async function PUT(
               ? body.category
               : "Props",
           }
+        : {}),
+
+      ...(body.tags !== undefined
+        ? { tags: normalizeTags(body.tags) }
+        : {}),
+
+      ...(typeof body.isPublished === "boolean"
+        ? { isPublished: body.isPublished }
         : {}),
 
       ...(body.wireframeImage !== undefined
@@ -174,6 +211,18 @@ export async function PUT(
       );
     }
 
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2025"
+    ) {
+      return NextResponse.json(
+        { error: "Project not found" },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Failed to update project" },
       { status: 500 }
@@ -181,15 +230,75 @@ export async function PUT(
   }
 }
 
+// Быстрое переключение Draft / Published
+export async function PATCH(
+  req: Request,
+  { params }: RouteContext
+) {
+  try {
+    const { id } = await params;
+    const projectId = getProjectId(id);
+
+    if (!projectId) {
+      return NextResponse.json(
+        { error: "Invalid project ID" },
+        { status: 400 }
+      );
+    }
+
+    const body = await req.json();
+
+    if (typeof body.isPublished !== "boolean") {
+      return NextResponse.json(
+        { error: "isPublished must be a boolean" },
+        { status: 400 }
+      );
+    }
+
+    const project = await prisma.project.update({
+      where: { id: projectId },
+      data: {
+        isPublished: body.isPublished,
+      },
+      select: {
+        id: true,
+        isPublished: true,
+      },
+    });
+
+    return NextResponse.json(project);
+  } catch (error) {
+    console.error("Change publishing status error:", error);
+
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2025"
+    ) {
+      return NextResponse.json(
+        { error: "Project not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Failed to change publishing status" },
+      { status: 500 }
+    );
+  }
+}
+
+// Удаление проекта
 export async function DELETE(
   _req: Request,
   { params }: RouteContext
 ) {
   try {
     const { id } = await params;
-    const projectId = Number(id);
+    const projectId = getProjectId(id);
 
-    if (!Number.isInteger(projectId) || projectId <= 0) {
+    if (!projectId) {
       return NextResponse.json(
         { error: "Invalid project ID" },
         { status: 400 }
@@ -203,6 +312,18 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete project error:", error);
+
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2025"
+    ) {
+      return NextResponse.json(
+        { error: "Project not found" },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json(
       { error: "Failed to delete project" },

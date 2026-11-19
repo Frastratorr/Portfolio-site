@@ -4,6 +4,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import ImageUploader from "../../../components/ui/ImageLoader";
+import ProjectMetadataFields from "../../../components/ui/ProjectMetadataFields";
 
 type ProjectData = {
   slug: string;
@@ -13,6 +14,8 @@ type ProjectData = {
   previewImage: string | null;
   gallery: string[];
   processImages: string[];
+  category: string;
+  tags: string[];
 };
 
 function EditForm() {
@@ -29,6 +32,9 @@ function EditForm() {
     title: "",
     description: "",
   });
+
+  const [category, setCategory] = useState("Props");
+  const [tags, setTags] = useState<string[]>([]);
 
   const [modelFile, setModelFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string[]>([]);
@@ -58,13 +64,21 @@ function EditForm() {
           description: data.description,
         });
 
-        setPreviewImage(data.previewImage ? [data.previewImage] : []);
+        setCategory(data.category || "Props");
+        setTags(Array.isArray(data.tags) ? data.tags : []);
+
+        setPreviewImage(
+          data.previewImage ? [data.previewImage] : []
+        );
+
         setGallery(data.gallery || []);
         setProcessImages(data.processImages || []);
       } catch (err) {
         if (active) {
           setError(
-            err instanceof Error ? err.message : "Ошибка загрузки проекта."
+            err instanceof Error
+              ? err.message
+              : "Ошибка загрузки проекта."
           );
         }
       } finally {
@@ -121,6 +135,8 @@ function EditForm() {
           previewImage: previewImage[0] || null,
           gallery,
           processImages,
+          category,
+          tags,
         }),
       });
 
@@ -134,8 +150,11 @@ function EditForm() {
       router.refresh();
     } catch (err) {
       console.error("Update project error:", err);
+
       setError(
-        err instanceof Error ? err.message : "Ошибка при сохранении проекта."
+        err instanceof Error
+          ? err.message
+          : "Ошибка при сохранении проекта."
       );
     } finally {
       setSaving(false);
@@ -151,34 +170,48 @@ function EditForm() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-4xl font-bold mb-8">Edit Project</h1>
+      <h1 className="text-4xl font-bold mb-8">
+        Edit Project
+      </h1>
 
       <form
         onSubmit={handleSubmit}
         className="space-y-8 bg-neutral-100 dark:bg-neutral-900 p-8 rounded-2xl border border-neutral-200 dark:border-neutral-800"
       >
         <div>
-          <label className="block text-sm font-medium mb-2">Slug</label>
+          <label className="block text-sm font-medium mb-2">
+            Slug
+          </label>
+
           <input
             type="text"
             required
             className={inputClass}
             value={formData.slug}
             onChange={(e) =>
-              setFormData({ ...formData, slug: e.target.value })
+              setFormData({
+                ...formData,
+                slug: e.target.value,
+              })
             }
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Title</label>
+          <label className="block text-sm font-medium mb-2">
+            Title
+          </label>
+
           <input
             type="text"
             required
             className={inputClass}
             value={formData.title}
             onChange={(e) =>
-              setFormData({ ...formData, title: e.target.value })
+              setFormData({
+                ...formData,
+                title: e.target.value,
+              })
             }
           />
         </div>
@@ -187,15 +220,26 @@ function EditForm() {
           <label className="block text-sm font-medium mb-2">
             Description
           </label>
+
           <textarea
             required
             className={`${inputClass} h-32`}
             value={formData.description}
             onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
+              setFormData({
+                ...formData,
+                description: e.target.value,
+              })
             }
           />
         </div>
+
+        <ProjectMetadataFields
+          category={category}
+          tags={tags}
+          onCategoryChange={setCategory}
+          onTagsChange={setTags}
+        />
 
         <div>
           <label className="block text-sm font-medium mb-2">
@@ -268,7 +312,13 @@ function EditForm() {
 export default function EditProjectPage() {
   return (
     <main className="min-h-screen bg-white dark:bg-neutral-950 text-black dark:text-white transition-colors duration-300 p-8">
-      <Suspense fallback={<div className="p-8 text-center">Загрузка формы...</div>}>
+      <Suspense
+        fallback={
+          <div className="p-8 text-center">
+            Загрузка формы...
+          </div>
+        }
+      >
         <EditForm />
       </Suspense>
     </main>

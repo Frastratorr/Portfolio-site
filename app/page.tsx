@@ -9,8 +9,13 @@ async function ProjectsSection() {
   await connection();
 
   const projects = await prisma.project.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  where: {
+    isPublished: true,
+  },
+  orderBy: {
+    createdAt: "desc",
+  },
+});
 
   return projects.length > 0 ? (
     <ProjectGrid projects={projects} />

@@ -47,6 +47,7 @@ export type ProjectMinAggregateOutputType = {
   previewImage: string | null
   arLink: string | null
   category: string | null
+  isPublished: boolean | null
   wireframeImage: string | null
   finalRender: string | null
   polygonCount: number | null
@@ -65,6 +66,7 @@ export type ProjectMaxAggregateOutputType = {
   previewImage: string | null
   arLink: string | null
   category: string | null
+  isPublished: boolean | null
   wireframeImage: string | null
   finalRender: string | null
   polygonCount: number | null
@@ -85,6 +87,8 @@ export type ProjectCountAggregateOutputType = {
   processImages: number
   arLink: number
   category: number
+  tags: number
+  isPublished: number
   wireframeImage: number
   finalRender: number
   polygonCount: number
@@ -118,6 +122,7 @@ export type ProjectMinAggregateInputType = {
   previewImage?: true
   arLink?: true
   category?: true
+  isPublished?: true
   wireframeImage?: true
   finalRender?: true
   polygonCount?: true
@@ -136,6 +141,7 @@ export type ProjectMaxAggregateInputType = {
   previewImage?: true
   arLink?: true
   category?: true
+  isPublished?: true
   wireframeImage?: true
   finalRender?: true
   polygonCount?: true
@@ -156,6 +162,8 @@ export type ProjectCountAggregateInputType = {
   processImages?: true
   arLink?: true
   category?: true
+  tags?: true
+  isPublished?: true
   wireframeImage?: true
   finalRender?: true
   polygonCount?: true
@@ -264,6 +272,8 @@ export type ProjectGroupByOutputType = {
   processImages: string[]
   arLink: string | null
   category: string
+  tags: string[]
+  isPublished: boolean
   wireframeImage: string | null
   finalRender: string | null
   polygonCount: number | null
@@ -308,6 +318,8 @@ export type ProjectWhereInput = {
   processImages?: Prisma.StringNullableListFilter<"Project">
   arLink?: Prisma.StringNullableFilter<"Project"> | string | null
   category?: Prisma.StringFilter<"Project"> | string
+  tags?: Prisma.StringNullableListFilter<"Project">
+  isPublished?: Prisma.BoolFilter<"Project"> | boolean
   wireframeImage?: Prisma.StringNullableFilter<"Project"> | string | null
   finalRender?: Prisma.StringNullableFilter<"Project"> | string | null
   polygonCount?: Prisma.IntNullableFilter<"Project"> | number | null
@@ -329,6 +341,8 @@ export type ProjectOrderByWithRelationInput = {
   processImages?: Prisma.SortOrder
   arLink?: Prisma.SortOrderInput | Prisma.SortOrder
   category?: Prisma.SortOrder
+  tags?: Prisma.SortOrder
+  isPublished?: Prisma.SortOrder
   wireframeImage?: Prisma.SortOrderInput | Prisma.SortOrder
   finalRender?: Prisma.SortOrderInput | Prisma.SortOrder
   polygonCount?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -353,6 +367,8 @@ export type ProjectWhereUniqueInput = Prisma.AtLeast<{
   processImages?: Prisma.StringNullableListFilter<"Project">
   arLink?: Prisma.StringNullableFilter<"Project"> | string | null
   category?: Prisma.StringFilter<"Project"> | string
+  tags?: Prisma.StringNullableListFilter<"Project">
+  isPublished?: Prisma.BoolFilter<"Project"> | boolean
   wireframeImage?: Prisma.StringNullableFilter<"Project"> | string | null
   finalRender?: Prisma.StringNullableFilter<"Project"> | string | null
   polygonCount?: Prisma.IntNullableFilter<"Project"> | number | null
@@ -374,6 +390,8 @@ export type ProjectOrderByWithAggregationInput = {
   processImages?: Prisma.SortOrder
   arLink?: Prisma.SortOrderInput | Prisma.SortOrder
   category?: Prisma.SortOrder
+  tags?: Prisma.SortOrder
+  isPublished?: Prisma.SortOrder
   wireframeImage?: Prisma.SortOrderInput | Prisma.SortOrder
   finalRender?: Prisma.SortOrderInput | Prisma.SortOrder
   polygonCount?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -403,6 +421,8 @@ export type ProjectScalarWhereWithAggregatesInput = {
   processImages?: Prisma.StringNullableListFilter<"Project">
   arLink?: Prisma.StringNullableWithAggregatesFilter<"Project"> | string | null
   category?: Prisma.StringWithAggregatesFilter<"Project"> | string
+  tags?: Prisma.StringNullableListFilter<"Project">
+  isPublished?: Prisma.BoolWithAggregatesFilter<"Project"> | boolean
   wireframeImage?: Prisma.StringNullableWithAggregatesFilter<"Project"> | string | null
   finalRender?: Prisma.StringNullableWithAggregatesFilter<"Project"> | string | null
   polygonCount?: Prisma.IntNullableWithAggregatesFilter<"Project"> | number | null
@@ -423,6 +443,8 @@ export type ProjectCreateInput = {
   processImages?: Prisma.ProjectCreateprocessImagesInput | string[]
   arLink?: string | null
   category?: string
+  tags?: Prisma.ProjectCreatetagsInput | string[]
+  isPublished?: boolean
   wireframeImage?: string | null
   finalRender?: string | null
   polygonCount?: number | null
@@ -444,6 +466,8 @@ export type ProjectUncheckedCreateInput = {
   processImages?: Prisma.ProjectCreateprocessImagesInput | string[]
   arLink?: string | null
   category?: string
+  tags?: Prisma.ProjectCreatetagsInput | string[]
+  isPublished?: boolean
   wireframeImage?: string | null
   finalRender?: string | null
   polygonCount?: number | null
@@ -464,6 +488,8 @@ export type ProjectUpdateInput = {
   processImages?: Prisma.ProjectUpdateprocessImagesInput | string[]
   arLink?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.ProjectUpdatetagsInput | string[]
+  isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   wireframeImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   finalRender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polygonCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -485,6 +511,8 @@ export type ProjectUncheckedUpdateInput = {
   processImages?: Prisma.ProjectUpdateprocessImagesInput | string[]
   arLink?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.ProjectUpdatetagsInput | string[]
+  isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   wireframeImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   finalRender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polygonCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -506,6 +534,8 @@ export type ProjectCreateManyInput = {
   processImages?: Prisma.ProjectCreateprocessImagesInput | string[]
   arLink?: string | null
   category?: string
+  tags?: Prisma.ProjectCreatetagsInput | string[]
+  isPublished?: boolean
   wireframeImage?: string | null
   finalRender?: string | null
   polygonCount?: number | null
@@ -526,6 +556,8 @@ export type ProjectUpdateManyMutationInput = {
   processImages?: Prisma.ProjectUpdateprocessImagesInput | string[]
   arLink?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.ProjectUpdatetagsInput | string[]
+  isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   wireframeImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   finalRender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polygonCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -547,6 +579,8 @@ export type ProjectUncheckedUpdateManyInput = {
   processImages?: Prisma.ProjectUpdateprocessImagesInput | string[]
   arLink?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.ProjectUpdatetagsInput | string[]
+  isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean
   wireframeImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   finalRender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polygonCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -576,6 +610,8 @@ export type ProjectCountOrderByAggregateInput = {
   processImages?: Prisma.SortOrder
   arLink?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  tags?: Prisma.SortOrder
+  isPublished?: Prisma.SortOrder
   wireframeImage?: Prisma.SortOrder
   finalRender?: Prisma.SortOrder
   polygonCount?: Prisma.SortOrder
@@ -601,6 +637,7 @@ export type ProjectMaxOrderByAggregateInput = {
   previewImage?: Prisma.SortOrder
   arLink?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  isPublished?: Prisma.SortOrder
   wireframeImage?: Prisma.SortOrder
   finalRender?: Prisma.SortOrder
   polygonCount?: Prisma.SortOrder
@@ -619,6 +656,7 @@ export type ProjectMinOrderByAggregateInput = {
   previewImage?: Prisma.SortOrder
   arLink?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  isPublished?: Prisma.SortOrder
   wireframeImage?: Prisma.SortOrder
   finalRender?: Prisma.SortOrder
   polygonCount?: Prisma.SortOrder
@@ -642,6 +680,10 @@ export type ProjectCreateprocessImagesInput = {
   set: string[]
 }
 
+export type ProjectCreatetagsInput = {
+  set: string[]
+}
+
 export type ProjectCreatesoftwareUsedInput = {
   set: string[]
 }
@@ -662,6 +704,15 @@ export type ProjectUpdategalleryInput = {
 export type ProjectUpdateprocessImagesInput = {
   set?: string[]
   push?: string | string[]
+}
+
+export type ProjectUpdatetagsInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
 }
 
 export type NullableIntFieldUpdateOperationsInput = {
@@ -702,6 +753,8 @@ export type ProjectSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   processImages?: boolean
   arLink?: boolean
   category?: boolean
+  tags?: boolean
+  isPublished?: boolean
   wireframeImage?: boolean
   finalRender?: boolean
   polygonCount?: boolean
@@ -723,6 +776,8 @@ export type ProjectSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   processImages?: boolean
   arLink?: boolean
   category?: boolean
+  tags?: boolean
+  isPublished?: boolean
   wireframeImage?: boolean
   finalRender?: boolean
   polygonCount?: boolean
@@ -744,6 +799,8 @@ export type ProjectSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   processImages?: boolean
   arLink?: boolean
   category?: boolean
+  tags?: boolean
+  isPublished?: boolean
   wireframeImage?: boolean
   finalRender?: boolean
   polygonCount?: boolean
@@ -765,6 +822,8 @@ export type ProjectSelectScalar = {
   processImages?: boolean
   arLink?: boolean
   category?: boolean
+  tags?: boolean
+  isPublished?: boolean
   wireframeImage?: boolean
   finalRender?: boolean
   polygonCount?: boolean
@@ -775,7 +834,7 @@ export type ProjectSelectScalar = {
   createdAt?: boolean
 }
 
-export type ProjectOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "title" | "description" | "modelPath" | "previewImage" | "gallery" | "processImages" | "arLink" | "category" | "wireframeImage" | "finalRender" | "polygonCount" | "triangleCount" | "textureResolution" | "softwareUsed" | "modelingTime" | "createdAt", ExtArgs["result"]["project"]>
+export type ProjectOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "title" | "description" | "modelPath" | "previewImage" | "gallery" | "processImages" | "arLink" | "category" | "tags" | "isPublished" | "wireframeImage" | "finalRender" | "polygonCount" | "triangleCount" | "textureResolution" | "softwareUsed" | "modelingTime" | "createdAt", ExtArgs["result"]["project"]>
 
 export type $ProjectPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Project"
@@ -791,6 +850,8 @@ export type $ProjectPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     processImages: string[]
     arLink: string | null
     category: string
+    tags: string[]
+    isPublished: boolean
     wireframeImage: string | null
     finalRender: string | null
     polygonCount: number | null
@@ -1232,6 +1293,8 @@ export interface ProjectFieldRefs {
   readonly processImages: Prisma.FieldRef<"Project", 'String[]'>
   readonly arLink: Prisma.FieldRef<"Project", 'String'>
   readonly category: Prisma.FieldRef<"Project", 'String'>
+  readonly tags: Prisma.FieldRef<"Project", 'String[]'>
+  readonly isPublished: Prisma.FieldRef<"Project", 'Boolean'>
   readonly wireframeImage: Prisma.FieldRef<"Project", 'String'>
   readonly finalRender: Prisma.FieldRef<"Project", 'String'>
   readonly polygonCount: Prisma.FieldRef<"Project", 'Int'>

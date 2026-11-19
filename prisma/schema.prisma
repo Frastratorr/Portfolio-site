@@ -19,6 +19,8 @@ model Project {
   arLink           String?
 
   category         String   @default("Props")
+  tags String[] @default([])
+  isPublished Boolean @default(true)
 
   wireframeImage   String?
   finalRender      String?
