@@ -10,16 +10,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Загружаем файл в Vercel Blob
+    // Загружаем файл в облако Vercel Blob
     const blob = await put(file.name, file, {
       access: 'public',
-      addRandomSuffix: true, // Добавляет случайный суффикс, чтобы имена не совпадали
+      addRandomSuffix: true, // Добавляет случайный суффикс к имени
     });
 
-    // Возвращаем полный URL (например: https://xyz.public.blob.vercel-storage.com/file.glb)
+    // Возвращаем ссылку на файл
     return NextResponse.json({ url: blob.url });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Upload error:", error);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

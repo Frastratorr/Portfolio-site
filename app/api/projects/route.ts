@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../lib/prisma";
 
-export async function GET() {
-  const projects = await prisma.project.findMany({ orderBy: { createdAt: "desc" } });
-  return NextResponse.json(projects);
-}
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     
+    // Проверка, что modelPath пришел
+    if (!body.modelPath) {
+      return NextResponse.json({ error: "Model path is required" }, { status: 400 });
+    }
+
     const project = await prisma.project.create({
       data: {
         slug: body.slug,
