@@ -11,70 +11,37 @@ type ImageUploaderProps = {
   multiple?: boolean;
 };
 
-const MAX_IMAGE_SIZE = 2000;
-const WEBP_QUALITY = 0.82;
+type UploadResult = {
+  url: string;
+  pathname: string;
+  originalSize: number;
+  optimizedSize: number;
+  savedBytes: number;
+  savingsPercent: number;
+  optimized: boolean;
+  contentType: string;
+  width: number | null;
+  height: number | null;
+};
 
-async function optimizeImage(file: File): Promise<File> {
-  // Preserve SVG files and animated GIFs.
-  if (
-    file.type === "image/svg+xml" ||
-    file.type === "image/gif"
-  ) {
-    return file;
+type OptimizationResult = {
+  name: string;
+  originalSize: number;
+  optimizedSize: number;
+  savedBytes: number;
+  savingsPercent: number;
+  contentType: string;
+  width: number | null;
+  height: number | null;
+};
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
   }
 
-  if (!file.type.startsWith("image/")) {
-    throw new Error("Only image files are allowed.");
-  }
-
-  try {
-    const bitmap = await createImageBitmap(file);
-
-    const scale = Math.min(
-      1,
-      MAX_IMAGE_SIZE / Math.max(bitmap.width, bitmap.height)
-    );
-
-    const width = Math.round(bitmap.width * scale);
-    const height = Math.round(bitmap.height * scale);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-
-    const context = canvas.getContext("2d");
-
-    if (!context) {
-      bitmap.close();
-      return file;
-    }
-
-    context.drawImage(bitmap, 0, 0, width, height);
-    bitmap.close();
-
-    const optimizedBlob = await new Promise<Blob | null>((resolve) => {
-      canvas.toBlob(resolve, "image/webp", WEBP_QUALITY);
-    });
-
-    if (!optimizedBlob) {
-      return file;
-    }
-
-    // Keep the original if WebP conversion does not reduce file size.
-    if (optimizedBlob.size >= file.size) {
-      return file;
-    }
-
-    const optimizedName = file.name.replace(/\.[^.]+$/, "") + ".webp";
-
-    return new File([optimizedBlob], optimizedName, {
-      type: "image/webp",
-      lastModified: Date.now(),
-    });
-  } catch (error) {
-    console.warn("Image optimization failed. Uploading original file.", error);
-    return file;
-  }
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
 export default function ImageUploader({
@@ -89,18 +56,22 @@ export default function ImageUploader({
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState("");
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [results, setResults] = useState<OptimizationResult[]>([]);
 
   const uploadFiles = async (files: FileList | File[]) => {
     const selected = Array.from(files);
 
     if (!selected.length) return;
 
-    const validFiles = selected.filter((file) =>
-      file.type.startsWith("image/")
+    const validFiles = selected.filter(
+      (file) =>
+        file.type.startsWith("image/") ||
+        file.name.toLowerCase().endsWith(".glb") ||
+        file.name.toLowerCase().endsWith(".gltf")
     );
 
     if (validFiles.length !== selected.length) {
-      setError("Only image files are allowed.");
+      setError("Unsupported file type.");
       return;
     }
 
@@ -110,17 +81,16 @@ export default function ImageUploader({
     }
 
     setError("");
+    setResults([]);
     setUploading(true);
 
     try {
       const uploadedUrls: string[] = [];
+      const optimizationResults: OptimizationResult[] = [];
 
-      for (const originalFile of validFiles) {
-        // Optimize the image before uploading.
-        const optimizedFile = await optimizeImage(originalFile);
-
+      for (const file of validFiles) {
         const formData = new FormData();
-        formData.append("file", optimizedFile);
+        formData.append("file", file);
 
         const response = await fetch("/api/upload", {
           method: "POST",
@@ -130,12 +100,25 @@ export default function ImageUploader({
         const data = await response.json();
 
         if (!response.ok || !data.url) {
-          throw new Error(
-            data.error || `Failed to upload ${originalFile.name}`
-          );
+          throw new Error(data.error || `Upload failed: ${file.name}`);
         }
 
-        uploadedUrls.push(data.url);
+        const result = data as UploadResult;
+
+        uploadedUrls.push(result.url);
+
+        if (result.optimized) {
+          optimizationResults.push({
+            name: file.name,
+            originalSize: result.originalSize,
+            optimizedSize: result.optimizedSize,
+            savedBytes: result.savedBytes,
+            savingsPercent: result.savingsPercent,
+            contentType: result.contentType,
+            width: result.width,
+            height: result.height,
+          });
+        }
       }
 
       onChange(
@@ -143,13 +126,15 @@ export default function ImageUploader({
           ? [...value, ...uploadedUrls]
           : uploadedUrls
       );
+
+      setResults(optimizationResults);
     } catch (err) {
       console.error("Image upload error:", err);
 
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to upload images."
+          : "Image upload failed."
       );
     } finally {
       setUploading(false);
@@ -169,7 +154,6 @@ export default function ImageUploader({
 
     const updated = [...value];
     const [moved] = updated.splice(from, 1);
-
     updated.splice(to, 0, moved);
 
     onChange(updated);
@@ -182,13 +166,8 @@ export default function ImageUploader({
 
         <p className="text-sm text-neutral-500 mt-1">
           {multiple
-            ? "Upload multiple images and reorder them by dragging."
-            : "Upload one image."}
-        </p>
-
-        <p className="text-xs text-neutral-500 mt-1">
-          Images are automatically optimized before uploading.
-          Maximum dimension: 2000px.
+            ? "Add multiple images and reorder them by dragging."
+            : "Add one image."}
         </p>
       </div>
 
@@ -207,19 +186,15 @@ export default function ImageUploader({
           if (!uploading) inputRef.current?.click();
         }}
         className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${
-          uploading
-            ? "opacity-60 cursor-not-allowed"
-            : "cursor-pointer"
-        } ${
           dragging
             ? "border-blue-500 bg-blue-500/10"
             : "border-neutral-300 dark:border-neutral-700 hover:border-blue-500"
-        }`}
+        } ${uploading ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
       >
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,.glb,.gltf"
           multiple={multiple}
           className="hidden"
           disabled={uploading}
@@ -234,14 +209,14 @@ export default function ImageUploader({
 
         <p className="font-semibold">
           {uploading
-            ? "Optimizing and uploading images..."
+            ? "Uploading and optimizing..."
             : dragging
-              ? "Drop images here"
-              : "Drag and drop images here"}
+              ? "Drop files here"
+              : "Drag files here"}
         </p>
 
         <p className="text-sm text-neutral-500 mt-2">
-          or click to select files
+          Or click to select files
         </p>
 
         {uploading && (
@@ -253,6 +228,73 @@ export default function ImageUploader({
 
       {error && (
         <p className="text-sm text-red-500">{error}</p>
+      )}
+
+      {results.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="font-semibold">Image Optimization Results</h4>
+
+          {results.map((result, index) => (
+            <div
+              key={`${result.name}-${index}`}
+              className="rounded-xl border border-neutral-300 dark:border-neutral-700 p-4 space-y-3"
+            >
+              <div className="flex justify-between gap-3">
+                <p className="font-medium text-sm truncate">
+                  {result.name}
+                </p>
+
+                <span className="text-xs text-green-600 font-semibold shrink-0">
+                  {result.savingsPercent}% saved
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-neutral-500">
+                    Original Size
+                  </p>
+                  <p className="font-semibold">
+                    {formatFileSize(result.originalSize)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-neutral-500">
+                    Optimized Size
+                  </p>
+                  <p className="font-semibold text-green-600">
+                    {formatFileSize(result.optimizedSize)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-neutral-500">
+                    Space Saved
+                  </p>
+                  <p className="font-semibold">
+                    {formatFileSize(result.savedBytes)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-neutral-500">
+                    Output Format
+                  </p>
+                  <p className="font-semibold">
+                    {result.contentType.replace("image/", "").toUpperCase()}
+                  </p>
+                </div>
+              </div>
+
+              {result.width && result.height && (
+                <p className="text-xs text-neutral-500">
+                  Resolution: {result.width} × {result.height}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
       )}
 
       {value.length > 0 && (
