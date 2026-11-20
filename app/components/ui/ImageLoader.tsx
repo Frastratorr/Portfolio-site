@@ -25,6 +25,7 @@ type UploadResult = {
 };
 
 type OptimizationResult = {
+  url: string;
   name: string;
   originalSize: number;
   optimizedSize: number;
@@ -81,7 +82,6 @@ export default function ImageUploader({
     }
 
     setError("");
-    setResults([]);
     setUploading(true);
 
     try {
@@ -109,6 +109,7 @@ export default function ImageUploader({
 
         if (result.optimized) {
           optimizationResults.push({
+            url: result.url,
             name: file.name,
             originalSize: result.originalSize,
             optimizedSize: result.optimizedSize,
@@ -127,7 +128,10 @@ export default function ImageUploader({
           : uploadedUrls
       );
 
-      setResults(optimizationResults);
+      setResults((previous) => [
+        ...previous,
+        ...optimizationResults,
+      ]);
     } catch (err) {
       console.error("Image upload error:", err);
 
@@ -146,7 +150,15 @@ export default function ImageUploader({
   };
 
   const removeImage = (index: number) => {
+    const removedUrl = value[index];
+
     onChange(value.filter((_, i) => i !== index));
+
+    setResults((previous) =>
+      previous.filter((result) => result.url !== removedUrl)
+    );
+
+    setError("");
   };
 
   const moveImage = (from: number, to: number) => {
@@ -234,9 +246,9 @@ export default function ImageUploader({
         <div className="space-y-3">
           <h4 className="font-semibold">Image Optimization Results</h4>
 
-          {results.map((result, index) => (
+          {results.map((result) => (
             <div
-              key={`${result.name}-${index}`}
+              key={result.url}
               className="rounded-xl border border-neutral-300 dark:border-neutral-700 p-4 space-y-3"
             >
               <div className="flex justify-between gap-3">
