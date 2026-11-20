@@ -44,6 +44,16 @@ function parseOptionalNumber(value: unknown): number | null | undefined {
   return number;
 }
 
+function parseOptionalString(value: unknown): string | null {
+  if (value === null) return null;
+
+  if (typeof value !== "string") {
+    throw new Error("SEO fields must contain text values.");
+  }
+
+  return value.trim() || null;
+}
+
 function getProjectId(id: string): number | null {
   const projectId = Number(id);
 
@@ -54,7 +64,7 @@ function getProjectId(id: string): number | null {
   return projectId;
 }
 
-// Получение проекта
+// Get a single project
 export async function GET(
   _req: Request,
   { params }: RouteContext
@@ -92,7 +102,7 @@ export async function GET(
   }
 }
 
-// Полное редактирование проекта
+// Update a project
 export async function PUT(
   req: Request,
   { params }: RouteContext
@@ -154,6 +164,10 @@ export async function PUT(
         ? { isPublished: body.isPublished }
         : {}),
 
+      ...(typeof body.isFeatured === "boolean"
+        ? { isFeatured: body.isFeatured }
+        : {}),
+
       ...(body.wireframeImage !== undefined
         ? { wireframeImage: body.wireframeImage || null }
         : {}),
@@ -181,6 +195,35 @@ export async function PUT(
       ...(body.modelingTime !== undefined
         ? { modelingTime: body.modelingTime || null }
         : {}),
+
+      // SEO Settings
+      ...(body.seoTitle !== undefined
+        ? { seoTitle: parseOptionalString(body.seoTitle) }
+        : {}),
+
+      ...(body.seoDescription !== undefined
+        ? { seoDescription: parseOptionalString(body.seoDescription) }
+        : {}),
+
+      ...(body.seoKeywords !== undefined
+        ? { seoKeywords: normalizeTags(body.seoKeywords) }
+        : {}),
+
+      ...(body.ogTitle !== undefined
+        ? { ogTitle: parseOptionalString(body.ogTitle) }
+        : {}),
+
+      ...(body.ogDescription !== undefined
+        ? { ogDescription: parseOptionalString(body.ogDescription) }
+        : {}),
+
+      ...(body.ogImage !== undefined
+        ? { ogImage: parseOptionalString(body.ogImage) }
+        : {}),
+
+      ...(body.canonicalUrl !== undefined
+        ? { canonicalUrl: parseOptionalString(body.canonicalUrl) }
+        : {}),
     };
 
     const updatedProject = await prisma.project.update({
@@ -192,7 +235,13 @@ export async function PUT(
   } catch (error) {
     console.error("Update project error:", error);
 
-    if (error instanceof Error && error.message.includes("counts must")) {
+    if (
+      error instanceof Error &&
+      (
+        error.message.includes("counts must") ||
+        error.message.includes("SEO fields")
+      )
+    ) {
       return NextResponse.json(
         { error: error.message },
         { status: 400 }
@@ -230,7 +279,7 @@ export async function PUT(
   }
 }
 
-// Быстрое переключение Draft / Published
+// Toggle publishing status and/or featured status
 export async function PATCH(
   req: Request,
   { params }: RouteContext
@@ -248,9 +297,15 @@ export async function PATCH(
 
     const body = await req.json();
 
-    if (typeof body.isPublished !== "boolean") {
+    const hasPublishingUpdate = typeof body.isPublished === "boolean";
+    const hasFeaturedUpdate = typeof body.isFeatured === "boolean";
+
+    if (!hasPublishingUpdate && !hasFeaturedUpdate) {
       return NextResponse.json(
-        { error: "isPublished must be a boolean" },
+        {
+          error:
+            "Provide a valid isPublished or isFeatured boolean value.",
+        },
         { status: 400 }
       );
     }
@@ -258,17 +313,23 @@ export async function PATCH(
     const project = await prisma.project.update({
       where: { id: projectId },
       data: {
-        isPublished: body.isPublished,
+        ...(hasPublishingUpdate
+          ? { isPublished: body.isPublished }
+          : {}),
+        ...(hasFeaturedUpdate
+          ? { isFeatured: body.isFeatured }
+          : {}),
       },
       select: {
         id: true,
         isPublished: true,
+        isFeatured: true,
       },
     });
 
     return NextResponse.json(project);
   } catch (error) {
-    console.error("Change publishing status error:", error);
+    console.error("Update project status error:", error);
 
     if (
       typeof error === "object" &&
@@ -283,13 +344,13 @@ export async function PATCH(
     }
 
     return NextResponse.json(
-      { error: "Failed to change publishing status" },
+      { error: "Failed to update project status" },
       { status: 500 }
     );
   }
 }
 
-// Удаление проекта
+// Delete a project
 export async function DELETE(
   _req: Request,
   { params }: RouteContext

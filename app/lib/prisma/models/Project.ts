@@ -28,12 +28,14 @@ export type AggregateProject = {
 
 export type ProjectAvgAggregateOutputType = {
   id: number | null
+  views: number | null
   polygonCount: number | null
   triangleCount: number | null
 }
 
 export type ProjectSumAggregateOutputType = {
   id: number | null
+  views: number | null
   polygonCount: number | null
   triangleCount: number | null
 }
@@ -48,6 +50,14 @@ export type ProjectMinAggregateOutputType = {
   arLink: string | null
   category: string | null
   isPublished: boolean | null
+  isFeatured: boolean | null
+  views: number | null
+  seoTitle: string | null
+  seoDescription: string | null
+  ogTitle: string | null
+  ogDescription: string | null
+  ogImage: string | null
+  canonicalUrl: string | null
   wireframeImage: string | null
   finalRender: string | null
   polygonCount: number | null
@@ -67,6 +77,14 @@ export type ProjectMaxAggregateOutputType = {
   arLink: string | null
   category: string | null
   isPublished: boolean | null
+  isFeatured: boolean | null
+  views: number | null
+  seoTitle: string | null
+  seoDescription: string | null
+  ogTitle: string | null
+  ogDescription: string | null
+  ogImage: string | null
+  canonicalUrl: string | null
   wireframeImage: string | null
   finalRender: string | null
   polygonCount: number | null
@@ -89,6 +107,15 @@ export type ProjectCountAggregateOutputType = {
   category: number
   tags: number
   isPublished: number
+  isFeatured: number
+  views: number
+  seoTitle: number
+  seoDescription: number
+  seoKeywords: number
+  ogTitle: number
+  ogDescription: number
+  ogImage: number
+  canonicalUrl: number
   wireframeImage: number
   finalRender: number
   polygonCount: number
@@ -103,12 +130,14 @@ export type ProjectCountAggregateOutputType = {
 
 export type ProjectAvgAggregateInputType = {
   id?: true
+  views?: true
   polygonCount?: true
   triangleCount?: true
 }
 
 export type ProjectSumAggregateInputType = {
   id?: true
+  views?: true
   polygonCount?: true
   triangleCount?: true
 }
@@ -123,6 +152,14 @@ export type ProjectMinAggregateInputType = {
   arLink?: true
   category?: true
   isPublished?: true
+  isFeatured?: true
+  views?: true
+  seoTitle?: true
+  seoDescription?: true
+  ogTitle?: true
+  ogDescription?: true
+  ogImage?: true
+  canonicalUrl?: true
   wireframeImage?: true
   finalRender?: true
   polygonCount?: true
@@ -142,6 +179,14 @@ export type ProjectMaxAggregateInputType = {
   arLink?: true
   category?: true
   isPublished?: true
+  isFeatured?: true
+  views?: true
+  seoTitle?: true
+  seoDescription?: true
+  ogTitle?: true
+  ogDescription?: true
+  ogImage?: true
+  canonicalUrl?: true
   wireframeImage?: true
   finalRender?: true
   polygonCount?: true
@@ -164,6 +209,15 @@ export type ProjectCountAggregateInputType = {
   category?: true
   tags?: true
   isPublished?: true
+  isFeatured?: true
+  views?: true
+  seoTitle?: true
+  seoDescription?: true
+  seoKeywords?: true
+  ogTitle?: true
+  ogDescription?: true
+  ogImage?: true
+  canonicalUrl?: true
   wireframeImage?: true
   finalRender?: true
   polygonCount?: true
@@ -274,6 +328,15 @@ export type ProjectGroupByOutputType = {
   category: string
   tags: string[]
   isPublished: boolean
+  isFeatured: boolean
+  views: number
+  seoTitle: string | null
+  seoDescription: string | null
+  seoKeywords: string[]
+  ogTitle: string | null
+  ogDescription: string | null
+  ogImage: string | null
+  canonicalUrl: string | null
   wireframeImage: string | null
   finalRender: string | null
   polygonCount: number | null
@@ -320,6 +383,15 @@ export type ProjectWhereInput = {
   category?: Prisma.StringFilter<"Project"> | string
   tags?: Prisma.StringNullableListFilter<"Project">
   isPublished?: Prisma.BoolFilter<"Project"> | boolean
+  isFeatured?: Prisma.BoolFilter<"Project"> | boolean
+  views?: Prisma.IntFilter<"Project"> | number
+  seoTitle?: Prisma.StringNullableFilter<"Project"> | string | null
+  seoDescription?: Prisma.StringNullableFilter<"Project"> | string | null
+  seoKeywords?: Prisma.StringNullableListFilter<"Project">
+  ogTitle?: Prisma.StringNullableFilter<"Project"> | string | null
+  ogDescription?: Prisma.StringNullableFilter<"Project"> | string | null
+  ogImage?: Prisma.StringNullableFilter<"Project"> | string | null
+  canonicalUrl?: Prisma.StringNullableFilter<"Project"> | string | null
   wireframeImage?: Prisma.StringNullableFilter<"Project"> | string | null
   finalRender?: Prisma.StringNullableFilter<"Project"> | string | null
   polygonCount?: Prisma.IntNullableFilter<"Project"> | number | null
@@ -343,6 +415,15 @@ export type ProjectOrderByWithRelationInput = {
   category?: Prisma.SortOrder
   tags?: Prisma.SortOrder
   isPublished?: Prisma.SortOrder
+  isFeatured?: Prisma.SortOrder
+  views?: Prisma.SortOrder
+  seoTitle?: Prisma.SortOrderInput | Prisma.SortOrder
+  seoDescription?: Prisma.SortOrderInput | Prisma.SortOrder
+  seoKeywords?: Prisma.SortOrder
+  ogTitle?: Prisma.SortOrderInput | Prisma.SortOrder
+  ogDescription?: Prisma.SortOrderInput | Prisma.SortOrder
+  ogImage?: Prisma.SortOrderInput | Prisma.SortOrder
+  canonicalUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   wireframeImage?: Prisma.SortOrderInput | Prisma.SortOrder
   finalRender?: Prisma.SortOrderInput | Prisma.SortOrder
   polygonCount?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -369,6 +450,15 @@ export type ProjectWhereUniqueInput = Prisma.AtLeast<{
   category?: Prisma.StringFilter<"Project"> | string
   tags?: Prisma.StringNullableListFilter<"Project">
   isPublished?: Prisma.BoolFilter<"Project"> | boolean
+  isFeatured?: Prisma.BoolFilter<"Project"> | boolean
+  views?: Prisma.IntFilter<"Project"> | number
+  seoTitle?: Prisma.StringNullableFilter<"Project"> | string | null
+  seoDescription?: Prisma.StringNullableFilter<"Project"> | string | null
+  seoKeywords?: Prisma.StringNullableListFilter<"Project">
+  ogTitle?: Prisma.StringNullableFilter<"Project"> | string | null
+  ogDescription?: Prisma.StringNullableFilter<"Project"> | string | null
+  ogImage?: Prisma.StringNullableFilter<"Project"> | string | null
+  canonicalUrl?: Prisma.StringNullableFilter<"Project"> | string | null
   wireframeImage?: Prisma.StringNullableFilter<"Project"> | string | null
   finalRender?: Prisma.StringNullableFilter<"Project"> | string | null
   polygonCount?: Prisma.IntNullableFilter<"Project"> | number | null
@@ -392,6 +482,15 @@ export type ProjectOrderByWithAggregationInput = {
   category?: Prisma.SortOrder
   tags?: Prisma.SortOrder
   isPublished?: Prisma.SortOrder
+  isFeatured?: Prisma.SortOrder
+  views?: Prisma.SortOrder
+  seoTitle?: Prisma.SortOrderInput | Prisma.SortOrder
+  seoDescription?: Prisma.SortOrderInput | Prisma.SortOrder
+  seoKeywords?: Prisma.SortOrder
+  ogTitle?: Prisma.SortOrderInput | Prisma.SortOrder
+  ogDescription?: Prisma.SortOrderInput | Prisma.SortOrder
+  ogImage?: Prisma.SortOrderInput | Prisma.SortOrder
+  canonicalUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   wireframeImage?: Prisma.SortOrderInput | Prisma.SortOrder
   finalRender?: Prisma.SortOrderInput | Prisma.SortOrder
   polygonCount?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -423,6 +522,15 @@ export type ProjectScalarWhereWithAggregatesInput = {
   category?: Prisma.StringWithAggregatesFilter<"Project"> | string
   tags?: Prisma.StringNullableListFilter<"Project">
   isPublished?: Prisma.BoolWithAggregatesFilter<"Project"> | boolean
+  isFeatured?: Prisma.BoolWithAggregatesFilter<"Project"> | boolean
+  views?: Prisma.IntWithAggregatesFilter<"Project"> | number
+  seoTitle?: Prisma.StringNullableWithAggregatesFilter<"Project"> | string | null
+  seoDescription?: Prisma.StringNullableWithAggregatesFilter<"Project"> | string | null
+  seoKeywords?: Prisma.StringNullableListFilter<"Project">
+  ogTitle?: Prisma.StringNullableWithAggregatesFilter<"Project"> | string | null
+  ogDescription?: Prisma.StringNullableWithAggregatesFilter<"Project"> | string | null
+  ogImage?: Prisma.StringNullableWithAggregatesFilter<"Project"> | string | null
+  canonicalUrl?: Prisma.StringNullableWithAggregatesFilter<"Project"> | string | null
   wireframeImage?: Prisma.StringNullableWithAggregatesFilter<"Project"> | string | null
   finalRender?: Prisma.StringNullableWithAggregatesFilter<"Project"> | string | null
   polygonCount?: Prisma.IntNullableWithAggregatesFilter<"Project"> | number | null
@@ -445,6 +553,15 @@ export type ProjectCreateInput = {
   category?: string
   tags?: Prisma.ProjectCreatetagsInput | string[]
   isPublished?: boolean
+  isFeatured?: boolean
+  views?: number
+  seoTitle?: string | null
+  seoDescription?: string | null
+  seoKeywords?: Prisma.ProjectCreateseoKeywordsInput | string[]
+  ogTitle?: string | null
+  ogDescription?: string | null
+  ogImage?: string | null
+  canonicalUrl?: string | null
   wireframeImage?: string | null
   finalRender?: string | null
   polygonCount?: number | null
@@ -468,6 +585,15 @@ export type ProjectUncheckedCreateInput = {
   category?: string
   tags?: Prisma.ProjectCreatetagsInput | string[]
   isPublished?: boolean
+  isFeatured?: boolean
+  views?: number
+  seoTitle?: string | null
+  seoDescription?: string | null
+  seoKeywords?: Prisma.ProjectCreateseoKeywordsInput | string[]
+  ogTitle?: string | null
+  ogDescription?: string | null
+  ogImage?: string | null
+  canonicalUrl?: string | null
   wireframeImage?: string | null
   finalRender?: string | null
   polygonCount?: number | null
@@ -490,6 +616,15 @@ export type ProjectUpdateInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.ProjectUpdatetagsInput | string[]
   isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  views?: Prisma.IntFieldUpdateOperationsInput | number
+  seoTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  seoDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  seoKeywords?: Prisma.ProjectUpdateseoKeywordsInput | string[]
+  ogTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ogDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ogImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  canonicalUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wireframeImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   finalRender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polygonCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -513,6 +648,15 @@ export type ProjectUncheckedUpdateInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.ProjectUpdatetagsInput | string[]
   isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  views?: Prisma.IntFieldUpdateOperationsInput | number
+  seoTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  seoDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  seoKeywords?: Prisma.ProjectUpdateseoKeywordsInput | string[]
+  ogTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ogDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ogImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  canonicalUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wireframeImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   finalRender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polygonCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -536,6 +680,15 @@ export type ProjectCreateManyInput = {
   category?: string
   tags?: Prisma.ProjectCreatetagsInput | string[]
   isPublished?: boolean
+  isFeatured?: boolean
+  views?: number
+  seoTitle?: string | null
+  seoDescription?: string | null
+  seoKeywords?: Prisma.ProjectCreateseoKeywordsInput | string[]
+  ogTitle?: string | null
+  ogDescription?: string | null
+  ogImage?: string | null
+  canonicalUrl?: string | null
   wireframeImage?: string | null
   finalRender?: string | null
   polygonCount?: number | null
@@ -558,6 +711,15 @@ export type ProjectUpdateManyMutationInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.ProjectUpdatetagsInput | string[]
   isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  views?: Prisma.IntFieldUpdateOperationsInput | number
+  seoTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  seoDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  seoKeywords?: Prisma.ProjectUpdateseoKeywordsInput | string[]
+  ogTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ogDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ogImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  canonicalUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wireframeImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   finalRender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polygonCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -581,6 +743,15 @@ export type ProjectUncheckedUpdateManyInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.ProjectUpdatetagsInput | string[]
   isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  views?: Prisma.IntFieldUpdateOperationsInput | number
+  seoTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  seoDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  seoKeywords?: Prisma.ProjectUpdateseoKeywordsInput | string[]
+  ogTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ogDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ogImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  canonicalUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wireframeImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   finalRender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polygonCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -612,6 +783,15 @@ export type ProjectCountOrderByAggregateInput = {
   category?: Prisma.SortOrder
   tags?: Prisma.SortOrder
   isPublished?: Prisma.SortOrder
+  isFeatured?: Prisma.SortOrder
+  views?: Prisma.SortOrder
+  seoTitle?: Prisma.SortOrder
+  seoDescription?: Prisma.SortOrder
+  seoKeywords?: Prisma.SortOrder
+  ogTitle?: Prisma.SortOrder
+  ogDescription?: Prisma.SortOrder
+  ogImage?: Prisma.SortOrder
+  canonicalUrl?: Prisma.SortOrder
   wireframeImage?: Prisma.SortOrder
   finalRender?: Prisma.SortOrder
   polygonCount?: Prisma.SortOrder
@@ -624,6 +804,7 @@ export type ProjectCountOrderByAggregateInput = {
 
 export type ProjectAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  views?: Prisma.SortOrder
   polygonCount?: Prisma.SortOrder
   triangleCount?: Prisma.SortOrder
 }
@@ -638,6 +819,14 @@ export type ProjectMaxOrderByAggregateInput = {
   arLink?: Prisma.SortOrder
   category?: Prisma.SortOrder
   isPublished?: Prisma.SortOrder
+  isFeatured?: Prisma.SortOrder
+  views?: Prisma.SortOrder
+  seoTitle?: Prisma.SortOrder
+  seoDescription?: Prisma.SortOrder
+  ogTitle?: Prisma.SortOrder
+  ogDescription?: Prisma.SortOrder
+  ogImage?: Prisma.SortOrder
+  canonicalUrl?: Prisma.SortOrder
   wireframeImage?: Prisma.SortOrder
   finalRender?: Prisma.SortOrder
   polygonCount?: Prisma.SortOrder
@@ -657,6 +846,14 @@ export type ProjectMinOrderByAggregateInput = {
   arLink?: Prisma.SortOrder
   category?: Prisma.SortOrder
   isPublished?: Prisma.SortOrder
+  isFeatured?: Prisma.SortOrder
+  views?: Prisma.SortOrder
+  seoTitle?: Prisma.SortOrder
+  seoDescription?: Prisma.SortOrder
+  ogTitle?: Prisma.SortOrder
+  ogDescription?: Prisma.SortOrder
+  ogImage?: Prisma.SortOrder
+  canonicalUrl?: Prisma.SortOrder
   wireframeImage?: Prisma.SortOrder
   finalRender?: Prisma.SortOrder
   polygonCount?: Prisma.SortOrder
@@ -668,6 +865,7 @@ export type ProjectMinOrderByAggregateInput = {
 
 export type ProjectSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  views?: Prisma.SortOrder
   polygonCount?: Prisma.SortOrder
   triangleCount?: Prisma.SortOrder
 }
@@ -681,6 +879,10 @@ export type ProjectCreateprocessImagesInput = {
 }
 
 export type ProjectCreatetagsInput = {
+  set: string[]
+}
+
+export type ProjectCreateseoKeywordsInput = {
   set: string[]
 }
 
@@ -715,6 +917,19 @@ export type BoolFieldUpdateOperationsInput = {
   set?: boolean
 }
 
+export type IntFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
+export type ProjectUpdateseoKeywordsInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
 export type NullableIntFieldUpdateOperationsInput = {
   set?: number | null
   increment?: number
@@ -732,14 +947,6 @@ export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 
 
 export type ProjectSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -755,6 +962,15 @@ export type ProjectSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   category?: boolean
   tags?: boolean
   isPublished?: boolean
+  isFeatured?: boolean
+  views?: boolean
+  seoTitle?: boolean
+  seoDescription?: boolean
+  seoKeywords?: boolean
+  ogTitle?: boolean
+  ogDescription?: boolean
+  ogImage?: boolean
+  canonicalUrl?: boolean
   wireframeImage?: boolean
   finalRender?: boolean
   polygonCount?: boolean
@@ -778,6 +994,15 @@ export type ProjectSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   category?: boolean
   tags?: boolean
   isPublished?: boolean
+  isFeatured?: boolean
+  views?: boolean
+  seoTitle?: boolean
+  seoDescription?: boolean
+  seoKeywords?: boolean
+  ogTitle?: boolean
+  ogDescription?: boolean
+  ogImage?: boolean
+  canonicalUrl?: boolean
   wireframeImage?: boolean
   finalRender?: boolean
   polygonCount?: boolean
@@ -801,6 +1026,15 @@ export type ProjectSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   category?: boolean
   tags?: boolean
   isPublished?: boolean
+  isFeatured?: boolean
+  views?: boolean
+  seoTitle?: boolean
+  seoDescription?: boolean
+  seoKeywords?: boolean
+  ogTitle?: boolean
+  ogDescription?: boolean
+  ogImage?: boolean
+  canonicalUrl?: boolean
   wireframeImage?: boolean
   finalRender?: boolean
   polygonCount?: boolean
@@ -824,6 +1058,15 @@ export type ProjectSelectScalar = {
   category?: boolean
   tags?: boolean
   isPublished?: boolean
+  isFeatured?: boolean
+  views?: boolean
+  seoTitle?: boolean
+  seoDescription?: boolean
+  seoKeywords?: boolean
+  ogTitle?: boolean
+  ogDescription?: boolean
+  ogImage?: boolean
+  canonicalUrl?: boolean
   wireframeImage?: boolean
   finalRender?: boolean
   polygonCount?: boolean
@@ -834,7 +1077,7 @@ export type ProjectSelectScalar = {
   createdAt?: boolean
 }
 
-export type ProjectOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "title" | "description" | "modelPath" | "previewImage" | "gallery" | "processImages" | "arLink" | "category" | "tags" | "isPublished" | "wireframeImage" | "finalRender" | "polygonCount" | "triangleCount" | "textureResolution" | "softwareUsed" | "modelingTime" | "createdAt", ExtArgs["result"]["project"]>
+export type ProjectOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "title" | "description" | "modelPath" | "previewImage" | "gallery" | "processImages" | "arLink" | "category" | "tags" | "isPublished" | "isFeatured" | "views" | "seoTitle" | "seoDescription" | "seoKeywords" | "ogTitle" | "ogDescription" | "ogImage" | "canonicalUrl" | "wireframeImage" | "finalRender" | "polygonCount" | "triangleCount" | "textureResolution" | "softwareUsed" | "modelingTime" | "createdAt", ExtArgs["result"]["project"]>
 
 export type $ProjectPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Project"
@@ -852,6 +1095,15 @@ export type $ProjectPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     category: string
     tags: string[]
     isPublished: boolean
+    isFeatured: boolean
+    views: number
+    seoTitle: string | null
+    seoDescription: string | null
+    seoKeywords: string[]
+    ogTitle: string | null
+    ogDescription: string | null
+    ogImage: string | null
+    canonicalUrl: string | null
     wireframeImage: string | null
     finalRender: string | null
     polygonCount: number | null
@@ -1295,6 +1547,15 @@ export interface ProjectFieldRefs {
   readonly category: Prisma.FieldRef<"Project", 'String'>
   readonly tags: Prisma.FieldRef<"Project", 'String[]'>
   readonly isPublished: Prisma.FieldRef<"Project", 'Boolean'>
+  readonly isFeatured: Prisma.FieldRef<"Project", 'Boolean'>
+  readonly views: Prisma.FieldRef<"Project", 'Int'>
+  readonly seoTitle: Prisma.FieldRef<"Project", 'String'>
+  readonly seoDescription: Prisma.FieldRef<"Project", 'String'>
+  readonly seoKeywords: Prisma.FieldRef<"Project", 'String[]'>
+  readonly ogTitle: Prisma.FieldRef<"Project", 'String'>
+  readonly ogDescription: Prisma.FieldRef<"Project", 'String'>
+  readonly ogImage: Prisma.FieldRef<"Project", 'String'>
+  readonly canonicalUrl: Prisma.FieldRef<"Project", 'String'>
   readonly wireframeImage: Prisma.FieldRef<"Project", 'String'>
   readonly finalRender: Prisma.FieldRef<"Project", 'String'>
   readonly polygonCount: Prisma.FieldRef<"Project", 'Int'>

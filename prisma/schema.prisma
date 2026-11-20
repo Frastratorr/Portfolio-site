@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client"
   output   = "../app/lib/prisma"
@@ -19,17 +20,41 @@ model Project {
   arLink           String?
 
   category         String   @default("Props")
-  tags String[] @default([])
-  isPublished Boolean @default(true)
+  tags             String[] @default([])
+  isPublished      Boolean  @default(true)
+  isFeatured       Boolean  @default(false)
+  views            Int      @default(0)
+
+  // SEO Settings
+  seoTitle         String?
+  seoDescription   String?
+  seoKeywords      String[] @default([])
+  ogTitle          String?
+  ogDescription    String?
+  ogImage          String?
+  canonicalUrl     String?
 
   wireframeImage   String?
   finalRender      String?
 
-  polygonCount     Int?
-  triangleCount    Int?
+  polygonCount      Int?
+  triangleCount     Int?
   textureResolution String?
-  softwareUsed     String[]
-  modelingTime     String?
+  softwareUsed      String[]
+  modelingTime      String?
 
   createdAt        DateTime @default(now())
+}
+
+model SiteSettings {
+  id               Int      @id @default(1)
+
+  // Global SEO
+  siteTitle        String   @default("3D Artist Portfolio")
+  siteDescription  String   @default("3D Artist Portfolio")
+  siteKeywords     String[] @default([])
+  siteUrl          String?
+  defaultOgImage   String?
+
+  updatedAt        DateTime @updatedAt
 }

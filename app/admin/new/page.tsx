@@ -20,6 +20,16 @@ export default function NewProjectPage() {
     description: "",
   });
 
+  const [seoData, setSeoData] = useState({
+    seoTitle: "",
+    seoDescription: "",
+    seoKeywords: "",
+    ogTitle: "",
+    ogDescription: "",
+    ogImage: "",
+    canonicalUrl: "",
+  });
+
   const [category, setCategory] = useState("Props");
   const [tags, setTags] = useState<string[]>([]);
 
@@ -45,6 +55,16 @@ export default function NewProjectPage() {
     value: string
   ) => {
     setTechnicalData((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+  };
+
+  const updateSeoData = (
+    field: keyof typeof seoData,
+    value: string
+  ) => {
+    setSeoData((previous) => ({
       ...previous,
       [field]: value,
     }));
@@ -124,17 +144,17 @@ export default function NewProjectPage() {
     e.preventDefault();
 
     if (!modelFile) {
-      setError("Пожалуйста, выбери 3D-модель.");
+      setError("Please select a 3D model.");
       return;
     }
 
     if (analyzing) {
-      setError("Дождись завершения анализа модели.");
+      setError("Please wait until model analysis is complete.");
       return;
     }
 
     if (previewImage.length === 0) {
-      setError("Пожалуйста, добавь главное изображение проекта.");
+      setError("Please add the main project image.");
       return;
     }
 
@@ -166,6 +186,17 @@ export default function NewProjectPage() {
             .map((item) => item.trim())
             .filter(Boolean),
           modelingTime: technicalData.modelingTime,
+
+          seoTitle: seoData.seoTitle.trim() || null,
+          seoDescription: seoData.seoDescription.trim() || null,
+          seoKeywords: seoData.seoKeywords
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
+          ogTitle: seoData.ogTitle.trim() || null,
+          ogDescription: seoData.ogDescription.trim() || null,
+          ogImage: seoData.ogImage.trim() || null,
+          canonicalUrl: seoData.canonicalUrl.trim() || null,
         }),
       });
 
@@ -173,7 +204,7 @@ export default function NewProjectPage() {
 
       if (!response.ok) {
         throw new Error(
-          result.error || "Не удалось создать проект."
+          result.error || "Could not create project."
         );
       }
 
@@ -185,7 +216,7 @@ export default function NewProjectPage() {
       setError(
         err instanceof Error
           ? err.message
-          : "Ошибка при создании проекта."
+          : "An error occurred while creating the project."
       );
     } finally {
       setLoading(false);
@@ -266,6 +297,125 @@ export default function NewProjectPage() {
             onTagsChange={setTags}
           />
 
+          <div className="border-t border-neutral-200 dark:border-neutral-800 pt-6 space-y-5">
+            <div>
+              <h2 className="text-xl font-bold">
+                SEO Settings
+              </h2>
+              <p className="text-sm text-neutral-500 mt-1">
+                Leave fields empty to use default project information.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                SEO Title
+              </label>
+              <input
+                type="text"
+                maxLength={70}
+                className={inputClass}
+                placeholder="Custom search engine title"
+                value={seoData.seoTitle}
+                onChange={(e) =>
+                  updateSeoData("seoTitle", e.target.value)
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                SEO Description
+              </label>
+              <textarea
+                maxLength={200}
+                className={`${inputClass} h-24`}
+                placeholder="Custom search engine description"
+                value={seoData.seoDescription}
+                onChange={(e) =>
+                  updateSeoData("seoDescription", e.target.value)
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                SEO Keywords
+              </label>
+              <input
+                type="text"
+                className={inputClass}
+                placeholder="3D modeling, Blender, hard surface"
+                value={seoData.seoKeywords}
+                onChange={(e) =>
+                  updateSeoData("seoKeywords", e.target.value)
+                }
+              />
+              <p className="text-xs text-neutral-500 mt-1">
+                Separate keywords with commas.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Open Graph Title
+              </label>
+              <input
+                type="text"
+                className={inputClass}
+                placeholder="Title displayed when sharing"
+                value={seoData.ogTitle}
+                onChange={(e) =>
+                  updateSeoData("ogTitle", e.target.value)
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Open Graph Description
+              </label>
+              <textarea
+                className={`${inputClass} h-24`}
+                placeholder="Description displayed when sharing"
+                value={seoData.ogDescription}
+                onChange={(e) =>
+                  updateSeoData("ogDescription", e.target.value)
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Open Graph Image URL
+              </label>
+              <input
+                type="url"
+                className={inputClass}
+                placeholder="https://example.com/image.jpg"
+                value={seoData.ogImage}
+                onChange={(e) =>
+                  updateSeoData("ogImage", e.target.value)
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Canonical URL
+              </label>
+              <input
+                type="url"
+                className={inputClass}
+                placeholder="https://example.com/projects/project-slug"
+                value={seoData.canonicalUrl}
+                onChange={(e) =>
+                  updateSeoData("canonicalUrl", e.target.value)
+                }
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium mb-2">
               3D Model (.glb)
@@ -283,14 +433,16 @@ export default function NewProjectPage() {
 
             {modelFile && (
               <p className="text-sm text-green-600 mt-2">
-                Выбрано: {modelFile.name}
+                Selected: {modelFile.name}
               </p>
             )}
 
             {analysisStatus && (
-              <p className={`text-sm mt-2 ${
-                analyzing ? "text-blue-500" : "text-green-600"
-              }`}>
+              <p
+                className={`text-sm mt-2 ${
+                  analyzing ? "text-blue-500" : "text-green-600"
+                }`}
+              >
                 {analysisStatus}
               </p>
             )}

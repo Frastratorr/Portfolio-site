@@ -16,6 +16,13 @@ type ProjectData = {
   processImages: string[];
   category: string;
   tags: string[];
+  seoTitle: string | null;
+  seoDescription: string | null;
+  seoKeywords: string[];
+  ogTitle: string | null;
+  ogDescription: string | null;
+  ogImage: string | null;
+  canonicalUrl: string | null;
 };
 
 function EditForm() {
@@ -33,6 +40,16 @@ function EditForm() {
     description: "",
   });
 
+  const [seoData, setSeoData] = useState({
+    seoTitle: "",
+    seoDescription: "",
+    seoKeywords: "",
+    ogTitle: "",
+    ogDescription: "",
+    ogImage: "",
+    canonicalUrl: "",
+  });
+
   const [category, setCategory] = useState("Props");
   const [tags, setTags] = useState<string[]>([]);
 
@@ -40,6 +57,19 @@ function EditForm() {
   const [previewImage, setPreviewImage] = useState<string[]>([]);
   const [gallery, setGallery] = useState<string[]>([]);
   const [processImages, setProcessImages] = useState<string[]>([]);
+
+  const inputClass =
+    "w-full p-3 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-700 outline-none focus:ring-2 focus:ring-blue-500";
+
+  const updateSeoData = (
+    field: keyof typeof seoData,
+    value: string
+  ) => {
+    setSeoData((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+  };
 
   useEffect(() => {
     let active = true;
@@ -51,7 +81,7 @@ function EditForm() {
         });
 
         if (!response.ok) {
-          throw new Error("Не удалось загрузить проект.");
+          throw new Error("Could not load project.");
         }
 
         const data: ProjectData = await response.json();
@@ -62,6 +92,18 @@ function EditForm() {
           slug: data.slug,
           title: data.title,
           description: data.description,
+        });
+
+        setSeoData({
+          seoTitle: data.seoTitle || "",
+          seoDescription: data.seoDescription || "",
+          seoKeywords: Array.isArray(data.seoKeywords)
+            ? data.seoKeywords.join(", ")
+            : "",
+          ogTitle: data.ogTitle || "",
+          ogDescription: data.ogDescription || "",
+          ogImage: data.ogImage || "",
+          canonicalUrl: data.canonicalUrl || "",
         });
 
         setCategory(data.category || "Props");
@@ -78,7 +120,7 @@ function EditForm() {
           setError(
             err instanceof Error
               ? err.message
-              : "Ошибка загрузки проекта."
+              : "Could not load project."
           );
         }
       } finally {
@@ -111,7 +153,9 @@ function EditForm() {
     return result.url as string;
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
 
     setSaving(true);
@@ -137,13 +181,24 @@ function EditForm() {
           processImages,
           category,
           tags,
+
+          seoTitle: seoData.seoTitle.trim() || null,
+          seoDescription: seoData.seoDescription.trim() || null,
+          seoKeywords: seoData.seoKeywords
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
+          ogTitle: seoData.ogTitle.trim() || null,
+          ogDescription: seoData.ogDescription.trim() || null,
+          ogImage: seoData.ogImage.trim() || null,
+          canonicalUrl: seoData.canonicalUrl.trim() || null,
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Ошибка при сохранении.");
+        throw new Error(result.error || "Could not save project.");
       }
 
       router.push("/admin");
@@ -154,18 +209,15 @@ function EditForm() {
       setError(
         err instanceof Error
           ? err.message
-          : "Ошибка при сохранении проекта."
+          : "Could not save project."
       );
     } finally {
       setSaving(false);
     }
   };
 
-  const inputClass =
-    "w-full p-3 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-700 outline-none focus:ring-2 focus:ring-blue-500";
-
   if (loading) {
-    return <div className="p-8">Загрузка проекта...</div>;
+    return <div className="p-8">Loading project...</div>;
   }
 
   return (
@@ -182,7 +234,6 @@ function EditForm() {
           <label className="block text-sm font-medium mb-2">
             Slug
           </label>
-
           <input
             type="text"
             required
@@ -201,7 +252,6 @@ function EditForm() {
           <label className="block text-sm font-medium mb-2">
             Title
           </label>
-
           <input
             type="text"
             required
@@ -220,7 +270,6 @@ function EditForm() {
           <label className="block text-sm font-medium mb-2">
             Description
           </label>
-
           <textarea
             required
             className={`${inputClass} h-32`}
@@ -241,6 +290,125 @@ function EditForm() {
           onTagsChange={setTags}
         />
 
+        <div className="border-t border-neutral-200 dark:border-neutral-800 pt-6 space-y-5">
+          <div>
+            <h2 className="text-xl font-bold">
+              SEO Settings
+            </h2>
+            <p className="text-sm text-neutral-500 mt-1">
+              Leave fields empty to use default project information.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              SEO Title
+            </label>
+            <input
+              type="text"
+              maxLength={70}
+              className={inputClass}
+              placeholder="Custom search engine title"
+              value={seoData.seoTitle}
+              onChange={(e) =>
+                updateSeoData("seoTitle", e.target.value)
+              }
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              SEO Description
+            </label>
+            <textarea
+              maxLength={200}
+              className={`${inputClass} h-24`}
+              placeholder="Custom search engine description"
+              value={seoData.seoDescription}
+              onChange={(e) =>
+                updateSeoData("seoDescription", e.target.value)
+              }
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              SEO Keywords
+            </label>
+            <input
+              type="text"
+              className={inputClass}
+              placeholder="3D modeling, Blender, hard surface"
+              value={seoData.seoKeywords}
+              onChange={(e) =>
+                updateSeoData("seoKeywords", e.target.value)
+              }
+            />
+            <p className="text-xs text-neutral-500 mt-1">
+              Separate keywords with commas.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Open Graph Title
+            </label>
+            <input
+              type="text"
+              className={inputClass}
+              placeholder="Title displayed when sharing"
+              value={seoData.ogTitle}
+              onChange={(e) =>
+                updateSeoData("ogTitle", e.target.value)
+              }
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Open Graph Description
+            </label>
+            <textarea
+              className={`${inputClass} h-24`}
+              placeholder="Description displayed when sharing"
+              value={seoData.ogDescription}
+              onChange={(e) =>
+                updateSeoData("ogDescription", e.target.value)
+              }
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Open Graph Image URL
+            </label>
+            <input
+              type="url"
+              className={inputClass}
+              placeholder="https://example.com/image.jpg"
+              value={seoData.ogImage}
+              onChange={(e) =>
+                updateSeoData("ogImage", e.target.value)
+              }
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Canonical URL
+            </label>
+            <input
+              type="url"
+              className={inputClass}
+              placeholder="https://example.com/projects/project-slug"
+              value={seoData.canonicalUrl}
+              onChange={(e) =>
+                updateSeoData("canonicalUrl", e.target.value)
+              }
+            />
+          </div>
+        </div>
+
         <div>
           <label className="block text-sm font-medium mb-2">
             Replace 3D Model (.glb)
@@ -257,12 +425,12 @@ function EditForm() {
 
           {modelFile && (
             <p className="text-sm text-green-600 mt-2">
-              Новая модель: {modelFile.name}
+              New model: {modelFile.name}
             </p>
           )}
 
           <p className="text-xs text-neutral-500 mt-2">
-            Если не выбирать файл, текущая 3D-модель останется без изменений.
+            If no file is selected, the current 3D model will remain unchanged.
           </p>
         </div>
 
@@ -315,7 +483,7 @@ export default function EditProjectPage() {
       <Suspense
         fallback={
           <div className="p-8 text-center">
-            Загрузка формы...
+            Loading form...
           </div>
         }
       >

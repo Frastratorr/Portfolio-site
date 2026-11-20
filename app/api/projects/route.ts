@@ -41,7 +41,19 @@ function parseOptionalNumber(value: unknown): number | null {
   return number;
 }
 
-// Получение всех проектов для админки
+function parseOptionalString(value: unknown): string | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  if (typeof value !== "string") {
+    throw new Error("SEO fields must contain text values.");
+  }
+
+  return value.trim() || null;
+}
+
+// Get all projects for the admin dashboard
 export async function GET() {
   try {
     const projects = await prisma.project.findMany({
@@ -54,6 +66,8 @@ export async function GET() {
         tags: true,
         createdAt: true,
         isPublished: true,
+        isFeatured: true,
+        views: true,
       },
     });
 
@@ -68,7 +82,7 @@ export async function GET() {
   }
 }
 
-// Создание проекта
+// Create a project
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -113,6 +127,11 @@ export async function POST(req: Request) {
             ? body.isPublished
             : true,
 
+        isFeatured:
+          typeof body.isFeatured === "boolean"
+            ? body.isFeatured
+            : false,
+
         wireframeImage: body.wireframeImage || null,
         finalRender: body.finalRender || null,
 
@@ -126,6 +145,15 @@ export async function POST(req: Request) {
           : [],
 
         modelingTime: body.modelingTime || null,
+
+        // SEO Settings
+        seoTitle: parseOptionalString(body.seoTitle),
+        seoDescription: parseOptionalString(body.seoDescription),
+        seoKeywords: normalizeTags(body.seoKeywords),
+        ogTitle: parseOptionalString(body.ogTitle),
+        ogDescription: parseOptionalString(body.ogDescription),
+        ogImage: parseOptionalString(body.ogImage),
+        canonicalUrl: parseOptionalString(body.canonicalUrl),
       },
     });
 
@@ -133,7 +161,13 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Create project error:", error);
 
-    if (error instanceof Error && error.message.includes("counts must")) {
+    if (
+      error instanceof Error &&
+      (
+        error.message.includes("counts must") ||
+        error.message.includes("SEO fields")
+      )
+    ) {
       return NextResponse.json(
         { error: error.message },
         { status: 400 }

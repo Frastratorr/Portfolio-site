@@ -1,32 +1,136 @@
 
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { prisma } from "./lib/prisma";
 import ProjectGrid from "./components/ui/ProjectGrid";
 import { connection } from "next/server";
 
-// Отдельный компонент для динамической загрузки проектов
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await prisma.siteSettings.findUnique({
+    where: { id: 1 },
+  });
+
+  const siteTitle = settings?.siteTitle || "3D Artist Portfolio";
+  const siteDescription =
+    settings?.siteDescription || "3D Artist Portfolio";
+
+  let metadataBase: URL | undefined;
+
+  if (settings?.siteUrl) {
+    try {
+      metadataBase = new URL(settings.siteUrl);
+    } catch {
+      console.error("Invalid site URL in SEO settings");
+    }
+  }
+
+  const ogImage = settings?.defaultOgImage || undefined;
+
+  return {
+    metadataBase,
+    title: siteTitle,
+    description: siteDescription,
+    keywords: settings?.siteKeywords ?? [],
+    alternates: {
+      canonical: "/",
+    },
+    openGraph: {
+      type: "website",
+      title: siteTitle,
+      description: siteDescription,
+      url: "/",
+      siteName: siteTitle,
+      images: ogImage ? [{ url: ogImage }] : [],
+    },
+    twitter: {
+      card: ogImage ? "summary_large_image" : "summary",
+      title: siteTitle,
+      description: siteDescription,
+      images: ogImage ? [ogImage] : [],
+    },
+  };
+}
+
 async function ProjectsSection() {
   await connection();
 
-  const projects = await prisma.project.findMany({
-  where: {
-    isPublished: true,
-  },
-  orderBy: {
-    createdAt: "desc",
-  },
-});
+  const [featuredProjects, allProjects] = await Promise.all([
+    prisma.project.findMany({
+      where: {
+        isPublished: true,
+        isFeatured: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
 
-  return projects.length > 0 ? (
-    <ProjectGrid projects={projects} />
-  ) : (
-    <div className="text-center py-20">
-      <p className="text-xl text-neutral-500 mb-4">
-        No projects in the database yet.
-      </p>
-      <p className="text-sm text-neutral-400">
-        Add your first project using the Admin panel!
-      </p>
+    prisma.project.findMany({
+      where: {
+        isPublished: true,
+        isFeatured: false,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+  ]);
+
+  return (
+    <div className="space-y-24">
+      {featuredProjects.length > 0 && (
+        <section>
+          <div className="mb-8">
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-blue-500 mb-3">
+              Selected Work
+            </p>
+
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight">
+              Featured Projects
+            </h2>
+
+            <p className="text-neutral-500 dark:text-neutral-400 mt-3">
+              A selection of my best 3D projects.
+            </p>
+          </div>
+
+          <ProjectGrid
+            projects={featuredProjects}
+            variant="featured"
+          />
+        </section>
+      )}
+
+      <section>
+        <div className="mb-8">
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-blue-500 mb-3">
+            Portfolio
+          </p>
+
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight">
+            All Projects
+          </h2>
+
+          <p className="text-neutral-500 dark:text-neutral-400 mt-3">
+            Explore my 3D models, props and environments.
+          </p>
+        </div>
+
+        {allProjects.length > 0 ? (
+          <ProjectGrid
+            projects={allProjects}
+            variant="all"
+          />
+        ) : (
+          <div className="py-16 text-center rounded-3xl border border-dashed border-neutral-300 dark:border-neutral-800">
+            <p className="text-neutral-500">
+              {featuredProjects.length > 0
+                ? "No additional projects available."
+                : "No projects available yet."}
+            </p>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

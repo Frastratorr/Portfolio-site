@@ -11,6 +11,72 @@ type ImageUploaderProps = {
   multiple?: boolean;
 };
 
+const MAX_IMAGE_SIZE = 2000;
+const WEBP_QUALITY = 0.82;
+
+async function optimizeImage(file: File): Promise<File> {
+  // Preserve SVG files and animated GIFs.
+  if (
+    file.type === "image/svg+xml" ||
+    file.type === "image/gif"
+  ) {
+    return file;
+  }
+
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Only image files are allowed.");
+  }
+
+  try {
+    const bitmap = await createImageBitmap(file);
+
+    const scale = Math.min(
+      1,
+      MAX_IMAGE_SIZE / Math.max(bitmap.width, bitmap.height)
+    );
+
+    const width = Math.round(bitmap.width * scale);
+    const height = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      bitmap.close();
+      return file;
+    }
+
+    context.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+
+    const optimizedBlob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/webp", WEBP_QUALITY);
+    });
+
+    if (!optimizedBlob) {
+      return file;
+    }
+
+    // Keep the original if WebP conversion does not reduce file size.
+    if (optimizedBlob.size >= file.size) {
+      return file;
+    }
+
+    const optimizedName = file.name.replace(/\.[^.]+$/, "") + ".webp";
+
+    return new File([optimizedBlob], optimizedName, {
+      type: "image/webp",
+      lastModified: Date.now(),
+    });
+  } catch (error) {
+    console.warn("Image optimization failed. Uploading original file.", error);
+    return file;
+  }
+}
+
 export default function ImageUploader({
   title,
   value,
@@ -18,6 +84,7 @@ export default function ImageUploader({
   multiple = true,
 }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState("");
@@ -33,12 +100,12 @@ export default function ImageUploader({
     );
 
     if (validFiles.length !== selected.length) {
-      setError("Можно загружать только изображения.");
+      setError("Only image files are allowed.");
       return;
     }
 
     if (!multiple && validFiles.length > 1) {
-      setError("Можно добавить только одно изображение.");
+      setError("Only one image can be uploaded.");
       return;
     }
 
@@ -48,9 +115,12 @@ export default function ImageUploader({
     try {
       const uploadedUrls: string[] = [];
 
-      for (const file of validFiles) {
+      for (const originalFile of validFiles) {
+        // Optimize the image before uploading.
+        const optimizedFile = await optimizeImage(originalFile);
+
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", optimizedFile);
 
         const response = await fetch("/api/upload", {
           method: "POST",
@@ -60,21 +130,33 @@ export default function ImageUploader({
         const data = await response.json();
 
         if (!response.ok || !data.url) {
-          throw new Error(data.error || `Ошибка загрузки ${file.name}`);
+          throw new Error(
+            data.error || `Failed to upload ${originalFile.name}`
+          );
         }
 
         uploadedUrls.push(data.url);
       }
 
-      onChange(multiple ? [...value, ...uploadedUrls] : uploadedUrls);
+      onChange(
+        multiple
+          ? [...value, ...uploadedUrls]
+          : uploadedUrls
+      );
     } catch (err) {
       console.error("Image upload error:", err);
+
       setError(
-        err instanceof Error ? err.message : "Ошибка загрузки изображений."
+        err instanceof Error
+          ? err.message
+          : "Failed to upload images."
       );
     } finally {
       setUploading(false);
-      if (inputRef.current) inputRef.current.value = "";
+
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
     }
   };
 
@@ -87,6 +169,7 @@ export default function ImageUploader({
 
     const updated = [...value];
     const [moved] = updated.splice(from, 1);
+
     updated.splice(to, 0, moved);
 
     onChange(updated);
@@ -96,10 +179,16 @@ export default function ImageUploader({
     <section className="space-y-4">
       <div>
         <h3 className="text-lg font-bold">{title}</h3>
+
         <p className="text-sm text-neutral-500 mt-1">
           {multiple
-            ? "Добавляй несколько изображений и меняй их порядок перетаскиванием."
-            : "Добавь одно изображение."}
+            ? "Upload multiple images and reorder them by dragging."
+            : "Upload one image."}
+        </p>
+
+        <p className="text-xs text-neutral-500 mt-1">
+          Images are automatically optimized before uploading.
+          Maximum dimension: 2000px.
         </p>
       </div>
 
@@ -114,8 +203,14 @@ export default function ImageUploader({
           setDragging(false);
           void uploadFiles(e.dataTransfer.files);
         }}
-        onClick={() => inputRef.current?.click()}
-        className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-colors ${
+        onClick={() => {
+          if (!uploading) inputRef.current?.click();
+        }}
+        className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${
+          uploading
+            ? "opacity-60 cursor-not-allowed"
+            : "cursor-pointer"
+        } ${
           dragging
             ? "border-blue-500 bg-blue-500/10"
             : "border-neutral-300 dark:border-neutral-700 hover:border-blue-500"
@@ -127,8 +222,11 @@ export default function ImageUploader({
           accept="image/*"
           multiple={multiple}
           className="hidden"
+          disabled={uploading}
           onChange={(e) => {
-            if (e.target.files) void uploadFiles(e.target.files);
+            if (e.target.files) {
+              void uploadFiles(e.target.files);
+            }
           }}
         />
 
@@ -136,14 +234,14 @@ export default function ImageUploader({
 
         <p className="font-semibold">
           {uploading
-            ? "Загрузка изображений..."
+            ? "Optimizing and uploading images..."
             : dragging
-              ? "Отпусти изображения здесь"
-              : "Перетащи изображения сюда"}
+              ? "Drop images here"
+              : "Drag and drop images here"}
         </p>
 
         <p className="text-sm text-neutral-500 mt-2">
-          или нажми, чтобы выбрать файлы
+          or click to select files
         </p>
 
         {uploading && (
@@ -167,9 +265,11 @@ export default function ImageUploader({
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault();
+
                 if (dragIndex !== null) {
                   moveImage(dragIndex, index);
                 }
+
                 setDragIndex(null);
               }}
               onDragEnd={() => setDragIndex(null)}
@@ -198,7 +298,7 @@ export default function ImageUploader({
                   removeImage(index);
                 }}
                 className="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-600 text-white hover:bg-red-500 transition-colors"
-                aria-label="Удалить изображение"
+                aria-label="Remove image"
               >
                 ×
               </button>
@@ -208,7 +308,7 @@ export default function ImageUploader({
       )}
 
       <p className="text-xs text-neutral-500">
-        Загружено изображений: {value.length}
+        Uploaded images: {value.length}
       </p>
     </section>
   );

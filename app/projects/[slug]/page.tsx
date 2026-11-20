@@ -1,4 +1,5 @@
 
+import type { Metadata } from "next";
 import { prisma } from "../../lib/prisma";
 import ModelViewer from "../../components/ModelViewer";
 import Gallery from "../../components/ui/Gallery";
@@ -6,14 +7,100 @@ import BeforeAfterSlider from "../../components/ui/BeforeAfterSlider";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-export default async function ProjectPage({
-  params,
-}: {
+type ProjectPageProps = {
   params: Promise<{ slug: string }>;
-}) {
+};
+
+export async function generateMetadata({
+  params,
+}: ProjectPageProps): Promise<Metadata> {
   const { slug } = await params;
 
-  // Находим только опубликованный проект
+  const [project, settings] = await Promise.all([
+    prisma.project.findFirst({
+      where: {
+        slug,
+        isPublished: true,
+      },
+    }),
+
+    prisma.siteSettings.findUnique({
+      where: { id: 1 },
+    }),
+  ]);
+
+  if (!project) {
+    return {
+      title: "Project Not Found",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
+
+  let metadataBase: URL | undefined;
+
+  if (settings?.siteUrl) {
+    try {
+      metadataBase = new URL(settings.siteUrl);
+    } catch {
+      console.error("Invalid site URL in SEO settings");
+    }
+  }
+
+  const title = project.seoTitle || project.title;
+
+  const description =
+    project.seoDescription || project.description;
+
+  const ogTitle = project.ogTitle || title;
+
+  const ogDescription =
+    project.ogDescription || description;
+
+  const ogImage =
+    project.ogImage || settings?.defaultOgImage || undefined;
+
+  const keywords =
+    project.seoKeywords.length > 0
+      ? project.seoKeywords
+      : settings?.siteKeywords ?? project.tags;
+
+  const canonicalUrl =
+    project.canonicalUrl || `/projects/${project.slug}`;
+
+  return {
+    metadataBase,
+    title,
+    description,
+    keywords,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      type: "article",
+      title: ogTitle,
+      description: ogDescription,
+      url: canonicalUrl,
+      siteName: settings?.siteTitle || "3D Artist Portfolio",
+      images: ogImage ? [{ url: ogImage }] : [],
+    },
+    twitter: {
+      card: ogImage ? "summary_large_image" : "summary",
+      title: ogTitle,
+      description: ogDescription,
+      images: ogImage ? [ogImage] : [],
+    },
+  };
+}
+
+export default async function ProjectPage({
+  params,
+}: ProjectPageProps) {
+  const { slug } = await params;
+
+  // Find only published projects
   const project = await prisma.project.findFirst({
     where: {
       slug,
@@ -25,7 +112,19 @@ export default async function ProjectPage({
     notFound();
   }
 
-  // Получаем только опубликованные проекты
+  // Increment project views
+  await prisma.project.update({
+    where: {
+      id: project.id,
+    },
+    data: {
+      views: {
+        increment: 1,
+      },
+    },
+  });
+
+  // Get only published projects
   const allProjects = await prisma.project.findMany({
     where: {
       isPublished: true,

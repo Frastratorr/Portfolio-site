@@ -51,7 +51,8 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  Project: 'Project'
+  Project: 'Project',
+  SiteSettings: 'SiteSettings'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -83,6 +84,15 @@ export const ProjectScalarFieldEnum = {
   category: 'category',
   tags: 'tags',
   isPublished: 'isPublished',
+  isFeatured: 'isFeatured',
+  views: 'views',
+  seoTitle: 'seoTitle',
+  seoDescription: 'seoDescription',
+  seoKeywords: 'seoKeywords',
+  ogTitle: 'ogTitle',
+  ogDescription: 'ogDescription',
+  ogImage: 'ogImage',
+  canonicalUrl: 'canonicalUrl',
   wireframeImage: 'wireframeImage',
   finalRender: 'finalRender',
   polygonCount: 'polygonCount',
@@ -94,6 +104,19 @@ export const ProjectScalarFieldEnum = {
 } as const
 
 export type ProjectScalarFieldEnum = (typeof ProjectScalarFieldEnum)[keyof typeof ProjectScalarFieldEnum]
+
+
+export const SiteSettingsScalarFieldEnum = {
+  id: 'id',
+  siteTitle: 'siteTitle',
+  siteDescription: 'siteDescription',
+  siteKeywords: 'siteKeywords',
+  siteUrl: 'siteUrl',
+  defaultOgImage: 'defaultOgImage',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SiteSettingsScalarFieldEnum = (typeof SiteSettingsScalarFieldEnum)[keyof typeof SiteSettingsScalarFieldEnum]
 
 
 export const SortOrder = {
